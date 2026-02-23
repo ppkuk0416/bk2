@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>직장인 내기 게임</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .title-wrap {
+    text-align: center;
+    margin-bottom: 50px;
+  }
+
+  .title-wrap h1 {
+    font-size: 2.8rem;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 0 30px rgba(255,200,0,0.5);
+    letter-spacing: -1px;
+  }
+
+  .title-wrap p {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.6);
+    margin-top: 10px;
+  }
+
+  .emoji-title {
+    font-size: 3.5rem;
+    display: block;
+    margin-bottom: 10px;
+    animation: bounce 2s infinite;
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    width: 100%;
+    max-width: 960px;
+  }
+
+  .game-card {
+    background: rgba(255,255,255,0.07);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    padding: 36px 28px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+  }
+
+  .game-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+    border-radius: 22px;
+  }
+
+  .game-card:hover {
+    transform: translateY(-8px);
+    border-color: rgba(255,255,255,0.3);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  .game-card.pirate::before { background: linear-gradient(135deg, rgba(255,100,100,0.2), rgba(255,50,50,0.1)); }
+  .game-card.rps::before   { background: linear-gradient(135deg, rgba(100,200,255,0.2), rgba(50,150,255,0.1)); }
+  .game-card.capybara::before { background: linear-gradient(135deg, rgba(100,255,150,0.2), rgba(50,200,100,0.1)); }
+
+  .game-card:hover::before { opacity: 1; }
+
+  .game-emoji {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    display: block;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+  }
+
+  .game-card h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 10px;
+  }
+
+  .game-card p {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.6;
+  }
+
+  .badge {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 6px 18px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .pirate .badge  { background: linear-gradient(90deg, #ff4444, #ff6b6b); }
+  .rps .badge     { background: linear-gradient(90deg, #4488ff, #44aaff); }
+  .capybara .badge{ background: linear-gradient(90deg, #44cc77, #66dd99); }
+
+  .footer {
+    margin-top: 48px;
+    color: rgba(255,255,255,0.3);
+    font-size: 0.8rem;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="title-wrap">
+  <span class="emoji-title">🎲</span>
+  <h1>직장인 내기 게임</h1>
+  <p>오늘 커피는 누가 쏠까? 공평하게 결정하자!</p>
+</div>
+
+<div class="games-grid">
+  <a href="game1.html" class="game-card pirate">
+    <span class="game-emoji">🗡️</span>
+    <h2>통아저씨 게임</h2>
+    <p>칼을 꽂다가 통아저씨가 튀어나오면 당첨!<br>누가 뚜껑을 열게 될까요?</p>
+    <span class="badge">2~8명</span>
+  </a>
+
+  <a href="game2.html" class="game-card rps">
+    <span class="game-emoji">✊</span>
+    <h2>가위바위보</h2>
+    <p>최대 6명이 이름을 입력하면<br>가상의 손들이 승부를 결정해요!</p>
+    <span class="badge">2~6명</span>
+  </a>
+
+  <a href="game3.html" class="game-card capybara">
+    <span class="game-emoji">🦫</span>
+    <h2>카피바라 경주</h2>
+    <p>귀여운 카피바라들이 달려요.<br>가장 느리게 들어오는 카피바라가 당첨!</p>
+    <span class="badge">2~8명</span>
+  </a>
+</div>
+
+<div class="footer">
+  <p>직장 내기는 소소하게, 즐겁게 🙂</p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>카피바라 경주</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: linear-gradient(135deg, #1a2e1a, #1a2e20, #0f3020);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    color: #fff;
+  }
+
+  .back-btn {
+    align-self: flex-start;
+    padding: 8px 20px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 999px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    transition: background 0.2s;
+  }
+  .back-btn:hover { background: rgba(255,255,255,0.2); }
+
+  h1 { font-size: 2rem; font-weight: 900; text-align: center; margin-bottom: 6px; }
+  .subtitle { color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-bottom: 30px; text-align: center; }
+
+  /* Setup */
+  .setup-box {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 30px;
+    width: 100%;
+    max-width: 480px;
+    margin-bottom: 30px;
+  }
+  .setup-box h3 { font-size: 1rem; margin-bottom: 14px; color: rgba(255,255,255,0.8); }
+  .name-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .name-inputs input {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    font-size: 0.95rem;
+    font-family: 'Noto Sans KR', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .name-inputs input::placeholder { color: rgba(255,255,255,0.3); }
+  .name-inputs input:focus { border-color: rgba(100,255,150,0.6); }
+
+  .btn-start {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(90deg, #44cc77, #66dd99);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .btn-start:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  /* Game area */
+  #game-area { display: none; width: 100%; max-width: 760px; }
+
+  .race-header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .race-status {
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+
+  /* Track */
+  .track-container {
+    background: rgba(0,0,0,0.35);
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255,255,255,0.08);
+    overflow: hidden;
+  }
+
+  .track {
+    position: relative;
+    margin-bottom: 12px;
+    height: 68px;
+    display: flex;
+    align-items: center;
+  }
+  .track:last-child { margin-bottom: 0; }
+
+  /* Lane background */
+  .lane-bg {
+    position: absolute;
+    top: 4px;
+    left: 90px;
+    right: 0;
+    bottom: 4px;
+    border-radius: 10px;
+    background: repeating-linear-gradient(
+      90deg,
+      rgba(255,255,255,0.03) 0px,
+      rgba(255,255,255,0.03) 30px,
+      rgba(255,255,255,0.06) 30px,
+      rgba(255,255,255,0.06) 60px
+    );
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /* Finish line */
+  .finish-line {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 12px;
+    height: 100%;
+    background: repeating-linear-gradient(
+      180deg,
+      #fff 0px, #fff 6px,
+      #333 6px, #333 12px
+    );
+    opacity: 0.4;
+    border-radius: 0 10px 10px 0;
+  }
+
+  .player-label {
+    position: absolute;
+    left: 0;
+    width: 85px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.8);
+    text-align: right;
+    padding-right: 10px;
+    z-index: 2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .capybara-runner {
+    position: absolute;
+    left: 90px; /* start after label */
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 2.2rem;
+    transition: left 0.15s linear;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  }
+
+  .capybara-name-tag {
+    font-size: 0.6rem;
+    background: rgba(0,0,0,0.6);
+    padding: 1px 5px;
+    border-radius: 4px;
+    white-space: nowrap;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+
+  /* Rank badge on finish */
+  .rank-badge {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 900;
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .rank-badge.show { opacity: 1; }
+  .rank-1  { background: #FFD700; color: #333; }
+  .rank-2  { background: #C0C0C0; color: #333; }
+  .rank-3  { background: #CD7F32; color: #fff; }
+  .rank-4  { background: rgba(255,255,255,0.15); color: #fff; }
+  .rank-5  { background: rgba(255,255,255,0.15); color: #fff; }
+  .rank-6  { background: rgba(255,255,255,0.15); color: #fff; }
+  .rank-7  { background: rgba(255,255,255,0.15); color: #fff; }
+  .rank-8  { background: rgba(255,255,255,0.15); color: #fff; }
+
+  /* Action btn */
+  .action-btn {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto 16px;
+    padding: 14px;
+    background: linear-gradient(90deg, #44cc77, #66dd99);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .action-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .action-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* Arrival log */
+  .arrival-log {
+    background: rgba(0,0,0,0.25);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.9;
+    min-height: 40px;
+  }
+
+  /* Result overlay */
+  .result-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+  }
+  .result-overlay.show { display: flex; }
+
+  .result-emoji { font-size: 6rem; margin-bottom: 20px; animation: popIn 0.6s forwards; }
+  @keyframes popIn {
+    0%   { transform: scale(0) rotate(-30deg); opacity: 0; }
+    70%  { transform: scale(1.2) rotate(5deg); }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  .result-title { font-size: 1.8rem; font-weight: 900; margin-bottom: 10px; color: #ff5555; }
+  .result-name  { font-size: 2.2rem; font-weight: 900; color: #ffdd44; margin-bottom: 8px; }
+  .result-sub   { color: rgba(255,255,255,0.5); font-size: 0.95rem; margin-bottom: 30px; }
+  .result-order { font-size: 0.85rem; color: rgba(255,255,255,0.4); margin-bottom: 24px; line-height:1.8; }
+
+  .btn-restart {
+    padding: 14px 40px;
+    background: linear-gradient(90deg, #44cc77, #66dd99);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+
+  /* Confetti-like celebration on last */
+  @keyframes slowPulse {
+    0%,100% { transform: scale(1); }
+    50%      { transform: scale(1.05); }
+  }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="back-btn">← 홈으로</a>
+<h1>🦫 카피바라 경주</h1>
+<p class="subtitle">가장 느리게 들어오는 카피바라가 당첨!</p>
+
+<!-- Setup -->
+<div class="setup-box" id="setup-box">
+  <h3>참가자 이름 입력 (2~8명)</h3>
+  <div class="name-inputs">
+    <input type="text" id="p1" placeholder="1번 참가자">
+    <input type="text" id="p2" placeholder="2번 참가자">
+    <input type="text" id="p3" placeholder="3번 참가자 (선택)">
+    <input type="text" id="p4" placeholder="4번 참가자 (선택)">
+    <input type="text" id="p5" placeholder="5번 참가자 (선택)">
+    <input type="text" id="p6" placeholder="6번 참가자 (선택)">
+    <input type="text" id="p7" placeholder="7번 참가자 (선택)">
+    <input type="text" id="p8" placeholder="8번 참가자 (선택)">
+  </div>
+  <button class="btn-start" onclick="startRace()">경주 시작!</button>
+</div>
+
+<!-- Game -->
+<div id="game-area">
+  <div class="race-header">
+    <div class="race-status" id="race-status">🏁 출발 준비!</div>
+  </div>
+
+  <div class="track-container" id="track-container"></div>
+
+  <button class="action-btn" id="action-btn" onclick="goRace()">🦫 출발!</button>
+
+  <div class="arrival-log" id="arrival-log"></div>
+</div>
+
+<!-- Result overlay -->
+<div class="result-overlay" id="result-overlay">
+  <div class="result-emoji">🦫</div>
+  <div class="result-title">꼴등 당첨!</div>
+  <div class="result-name" id="result-name"></div>
+  <div class="result-sub">가장 느린 카피바라... 커피 사줘요 ☕</div>
+  <div class="result-order" id="result-order"></div>
+  <button class="btn-restart" onclick="resetRace()">다시 하기</button>
+  <a href="index.html" style="display:block;margin-top:14px;color:rgba(255,255,255,0.4);font-size:0.9rem;text-decoration:none;">홈으로</a>
+</div>
+
+<script>
+  // Different capybara colors/variants using emoji combos
+  const CAPYBARAS = ['🦫','🦫','🦫','🦫','🦫','🦫','🦫','🦫'];
+  const COLORS = ['#FFD700','#FF6B6B','#44AAFF','#AA44FF','#FF9944','#44FFAA','#FF44AA','#44FFFF'];
+
+  let players = [];
+  let positions = []; // 0 to 1
+  let speeds = [];    // current speed per frame
+  let finished = [];  // order of finish (index)
+  let running = false;
+  let animFrameId = null;
+  let trackWidth = 0;
+
+  function startRace() {
+    const ids = ['p1','p2','p3','p4','p5','p6','p7','p8'];
+    players = ids.map(id => document.getElementById(id).value.trim()).filter(Boolean);
+    if (players.length < 2) { alert('최소 2명 입력해주세요!'); return; }
+
+    document.getElementById('setup-box').style.display = 'none';
+    document.getElementById('game-area').style.display = 'block';
+
+    buildTracks();
+    resetPositions();
+    document.getElementById('action-btn').disabled = false;
+    document.getElementById('action-btn').textContent = '🦫 출발!';
+    document.getElementById('race-status').textContent = '🏁 출발 준비!';
+    document.getElementById('arrival-log').innerHTML = '';
+  }
+
+  function buildTracks() {
+    const container = document.getElementById('track-container');
+    container.innerHTML = '';
+
+    players.forEach((name, i) => {
+      const track = document.createElement('div');
+      track.className = 'track';
+      track.id = `track-${i}`;
+
+      track.innerHTML = `
+        <div class="lane-bg"></div>
+        <div class="finish-line"></div>
+        <div class="player-label" style="color:${COLORS[i]}">${name}</div>
+        <div class="capybara-runner" id="runner-${i}">
+          <span class="cap-body">${CAPYBARAS[i]}</span>
+          <div class="capybara-name-tag" style="color:${COLORS[i]}">${name}</div>
+        </div>
+        <div class="rank-badge rank-${i+1}" id="rank-${i}"></div>
+      `;
+
+      container.appendChild(track);
+    });
+
+    // Measure track usable width
+    requestAnimationFrame(() => {
+      const lane = document.querySelector('.lane-bg');
+      if (lane) {
+        trackWidth = lane.offsetWidth - 50; // 50px buffer for capybara size
+      }
+    });
+  }
+
+  function resetPositions() {
+    positions = players.map(() => 0);
+    speeds = players.map(() => 0);
+    finished = [];
+    running = false;
+
+    players.forEach((_, i) => {
+      setRunnerPos(i, 0);
+      const rank = document.getElementById(`rank-${i}`);
+      if (rank) { rank.className = `rank-badge rank-${i+1}`; rank.textContent = ''; }
+    });
+  }
+
+  function setRunnerPos(i, frac) {
+    const runner = document.getElementById(`runner-${i}`);
+    if (!runner) return;
+    const lane = document.querySelector(`#track-${i} .lane-bg`);
+    const laneW = lane ? lane.offsetWidth : 500;
+    const maxPx = laneW - 50;
+    const px = 90 + frac * maxPx; // 90px = label width
+    runner.style.left = px + 'px';
+
+    // Flip when moving
+    const body = runner.querySelector('.cap-body');
+    if (body) body.style.transform = frac > 0 && frac < 1 ? 'scaleX(1)' : 'scaleX(1)';
+  }
+
+  function goRace() {
+    if (running) return;
+    running = true;
+    document.getElementById('action-btn').disabled = true;
+    document.getElementById('race-status').textContent = '🦫 달리는 중...';
+    document.getElementById('arrival-log').innerHTML = '';
+    finished = [];
+
+    // Assign base speeds - random between 0.0008 and 0.003 per frame
+    // Lower speed = slower = loser target
+    speeds = players.map(() => (Math.random() * 0.0022 + 0.0008));
+    positions = players.map(() => 0);
+
+    players.forEach((_, i) => setRunnerPos(i, 0));
+
+    // Reset ranks
+    players.forEach((_, i) => {
+      const rank = document.getElementById(`rank-${i}`);
+      if (rank) { rank.className = `rank-badge rank-${i+1}`; rank.textContent = ''; }
+    });
+
+    tick();
+  }
+
+  function tick() {
+    let allDone = true;
+
+    players.forEach((name, i) => {
+      if (positions[i] >= 1) return; // already done
+
+      allDone = false;
+
+      // Add some turbulence (random acceleration)
+      const turbulence = (Math.random() - 0.48) * 0.001;
+      speeds[i] = Math.max(0.0003, Math.min(0.004, speeds[i] + turbulence));
+
+      positions[i] += speeds[i];
+
+      if (positions[i] >= 1) {
+        positions[i] = 1;
+        finished.push(i);
+        setRunnerPos(i, 1);
+
+        const place = finished.length;
+        const rank = document.getElementById(`rank-${i}`);
+        const medals = ['🥇','🥈','🥉'];
+        if (rank) {
+          rank.className = `rank-badge rank-${place} show`;
+          rank.textContent = medals[place-1] || place;
+        }
+
+        addArrivalLog(place, name);
+      } else {
+        setRunnerPos(i, positions[i]);
+      }
+    });
+
+    // Animate body bounce
+    players.forEach((_, i) => {
+      if (positions[i] < 1) {
+        const body = document.getElementById(`runner-${i}`)?.querySelector('.cap-body');
+        if (body) {
+          const bounce = Math.sin(Date.now() * 0.015 + i) * 3;
+          body.style.transform = `translateY(${bounce}px)`;
+        }
+      }
+    });
+
+    if (finished.length === players.length) {
+      allDone = true;
+    }
+
+    if (!allDone) {
+      animFrameId = requestAnimationFrame(tick);
+    } else {
+      running = false;
+      // Last one to finish = loser
+      const lastIndex = finished[finished.length - 1];
+      document.getElementById('race-status').textContent = '🏁 결승!';
+      setTimeout(() => showResult(lastIndex), 800);
+    }
+  }
+
+  function addArrivalLog(place, name) {
+    const medals = ['🥇','🥈','🥉'];
+    const icon = medals[place-1] || `${place}위`;
+    const log = document.getElementById('arrival-log');
+    log.innerHTML += `<div>${icon} ${place}등: <strong>${name}</strong></div>`;
+  }
+
+  function showResult(loserIndex) {
+    const loser = players[loserIndex];
+    document.getElementById('result-name').textContent = loser;
+
+    // Build order string
+    const orderLines = finished.map((idx, rank) => {
+      const medals = ['🥇','🥈','🥉'];
+      const icon = medals[rank] || `${rank+1}위`;
+      return `${icon} ${players[idx]}`;
+    });
+    document.getElementById('result-order').innerHTML = orderLines.join('<br>');
+
+    document.getElementById('result-overlay').classList.add('show');
+  }
+
+  function resetRace() {
+    if (animFrameId) cancelAnimationFrame(animFrameId);
+    document.getElementById('result-overlay').classList.remove('show');
+    document.getElementById('setup-box').style.display = 'block';
+    document.getElementById('game-area').style.display = 'none';
+    document.querySelectorAll('.name-inputs input').forEach(i => i.value = '');
+  }
+</script>
+</body>
+</html>

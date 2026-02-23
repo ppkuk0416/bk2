@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>가위바위보</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    color: #fff;
+  }
+
+  .back-btn {
+    align-self: flex-start;
+    padding: 8px 20px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 999px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    transition: background 0.2s;
+  }
+  .back-btn:hover { background: rgba(255,255,255,0.2); }
+
+  h1 { font-size: 2rem; font-weight: 900; text-align: center; margin-bottom: 6px; }
+  .subtitle { color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-bottom: 30px; text-align: center; }
+
+  /* Setup */
+  .setup-box {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 30px;
+    width: 100%;
+    max-width: 480px;
+    margin-bottom: 30px;
+  }
+  .setup-box h3 { font-size: 1rem; margin-bottom: 14px; color: rgba(255,255,255,0.8); }
+  .name-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .name-inputs input {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    font-size: 0.95rem;
+    font-family: 'Noto Sans KR', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .name-inputs input::placeholder { color: rgba(255,255,255,0.3); }
+  .name-inputs input:focus { border-color: rgba(100,150,255,0.6); }
+
+  .btn-start {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(90deg, #4488ff, #44aaff);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .btn-start:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  /* Game area */
+  #game-area { display: none; width: 100%; max-width: 700px; }
+
+  .round-info {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .round-badge {
+    display: inline-block;
+    padding: 6px 22px;
+    border-radius: 999px;
+    background: rgba(100,150,255,0.2);
+    border: 1px solid rgba(100,150,255,0.4);
+    font-size: 0.9rem;
+    color: #88bbff;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .round-status {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  /* Hands stage */
+  .hands-stage {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+    margin: 20px 0;
+    min-height: 150px;
+    align-items: center;
+  }
+
+  .hand-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 20px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.12);
+    transition: all 0.3s;
+    min-width: 90px;
+  }
+  .hand-card.winner {
+    background: rgba(100,200,100,0.2);
+    border-color: #44dd77;
+    box-shadow: 0 0 20px rgba(68,221,119,0.3);
+  }
+  .hand-card.loser {
+    background: rgba(255,80,80,0.2);
+    border-color: #ff4444;
+    box-shadow: 0 0 20px rgba(255,68,68,0.3);
+    opacity: 0.7;
+  }
+  .hand-card.tie {
+    background: rgba(255,200,50,0.15);
+    border-color: rgba(255,200,50,0.5);
+  }
+
+  .hand-emoji {
+    font-size: 2.8rem;
+    transition: all 0.15s;
+    display: block;
+    animation: none;
+  }
+  .hand-emoji.shaking {
+    animation: handShake 0.1s infinite;
+  }
+  @keyframes handShake {
+    0%   { transform: translateY(0) rotate(-5deg); }
+    50%  { transform: translateY(-8px) rotate(5deg); }
+    100% { transform: translateY(0) rotate(-5deg); }
+  }
+
+  .hand-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.8);
+  }
+  .hand-move-label {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.4);
+    font-weight: 700;
+    min-height: 16px;
+  }
+
+  /* vs text */
+  .vs-badge {
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: rgba(255,255,255,0.2);
+    align-self: center;
+  }
+
+  /* Eliminated list */
+  .eliminated-section {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .eliminated-label {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 8px;
+  }
+  .eliminated-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+  }
+  .elim-chip {
+    padding: 4px 14px;
+    border-radius: 999px;
+    background: rgba(255,80,80,0.15);
+    border: 1px solid rgba(255,80,80,0.3);
+    font-size: 0.8rem;
+    color: rgba(255,150,150,0.8);
+    text-decoration: line-through;
+  }
+
+  /* Action btn */
+  .action-btn {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+    padding: 14px;
+    background: linear-gradient(90deg, #4488ff, #44aaff);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .action-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* Log */
+  .log-box {
+    margin-top: 20px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+    padding: 14px 18px;
+    max-height: 160px;
+    overflow-y: auto;
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.8;
+  }
+  .log-box::-webkit-scrollbar { width: 4px; }
+  .log-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+  /* Result */
+  .result-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+  }
+  .result-overlay.show { display: flex; }
+
+  .result-emoji { font-size: 6rem; margin-bottom: 20px; animation: popIn 0.6s forwards; }
+  @keyframes popIn {
+    0%   { transform: scale(0) rotate(-30deg); opacity: 0; }
+    70%  { transform: scale(1.2) rotate(5deg); }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  .result-title { font-size: 2.2rem; font-weight: 900; margin-bottom: 10px; color: #ff5555; }
+  .result-name  { font-size: 1.8rem; font-weight: 700; color: #ffdd44; margin-bottom: 8px; }
+  .result-sub   { color: rgba(255,255,255,0.5); font-size: 0.95rem; margin-bottom: 30px; }
+
+  .btn-restart {
+    padding: 14px 40px;
+    background: linear-gradient(90deg, #4488ff, #44aaff);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="back-btn">← 홈으로</a>
+<h1>✊ 가위바위보</h1>
+<p class="subtitle">지는 사람이 나올 때까지 승부!</p>
+
+<!-- Setup -->
+<div class="setup-box" id="setup-box">
+  <h3>참가자 이름 입력 (2~6명)</h3>
+  <div class="name-inputs">
+    <input type="text" id="p1" placeholder="1번 참가자">
+    <input type="text" id="p2" placeholder="2번 참가자">
+    <input type="text" id="p3" placeholder="3번 참가자 (선택)">
+    <input type="text" id="p4" placeholder="4번 참가자 (선택)">
+    <input type="text" id="p5" placeholder="5번 참가자 (선택)">
+    <input type="text" id="p6" placeholder="6번 참가자 (선택)">
+  </div>
+  <button class="btn-start" onclick="startGame()">게임 시작!</button>
+</div>
+
+<!-- Game -->
+<div id="game-area">
+  <div class="round-info">
+    <div class="round-badge" id="round-badge">1라운드</div>
+    <div class="round-status" id="round-status">준비 완료!</div>
+  </div>
+
+  <div class="eliminated-section" id="eliminated-section" style="display:none;">
+    <div class="eliminated-label">탈락자</div>
+    <div class="eliminated-chips" id="eliminated-chips"></div>
+  </div>
+
+  <div class="hands-stage" id="hands-stage"></div>
+
+  <button class="action-btn" id="action-btn" onclick="doRound()">가위바위보!</button>
+
+  <div class="log-box" id="log-box"></div>
+</div>
+
+<!-- Result -->
+<div class="result-overlay" id="result-overlay">
+  <div class="result-emoji">😱</div>
+  <div class="result-title">최후의 패배자!</div>
+  <div class="result-name" id="result-name"></div>
+  <div class="result-sub">커피 한 잔 부탁해요 ☕</div>
+  <button class="btn-restart" onclick="resetGame()">다시 하기</button>
+  <a href="index.html" style="display:block;margin-top:14px;color:rgba(255,255,255,0.4);font-size:0.9rem;text-decoration:none;">홈으로</a>
+</div>
+
+<script>
+  const MOVES = ['가위', '바위', '보'];
+  const EMOJIS = { '가위': '✌️', '바위': '✊', '보': '🖐️' };
+
+  // Wins against: 가위>보, 바위>가위, 보>바위
+  const BEATS = { '가위': '보', '바위': '가위', '보': '바위' };
+
+  let allPlayers = [];
+  let activePlayers = [];
+  let eliminated = [];
+  let round = 1;
+  let animating = false;
+
+  function startGame() {
+    const ids = ['p1','p2','p3','p4','p5','p6'];
+    allPlayers = ids.map(id => document.getElementById(id).value.trim()).filter(Boolean);
+    if (allPlayers.length < 2) { alert('최소 2명 입력해주세요!'); return; }
+    if (allPlayers.length > 6) { alert('최대 6명까지 입니다!'); return; }
+
+    activePlayers = [...allPlayers];
+    eliminated = [];
+    round = 1;
+
+    document.getElementById('setup-box').style.display = 'none';
+    document.getElementById('game-area').style.display = 'block';
+    document.getElementById('log-box').innerHTML = '';
+
+    renderStage();
+    updateUI();
+  }
+
+  function renderStage() {
+    const stage = document.getElementById('hands-stage');
+    stage.innerHTML = '';
+    activePlayers.forEach((name, i) => {
+      if (i > 0) {
+        const vs = document.createElement('div');
+        vs.className = 'vs-badge';
+        vs.textContent = 'vs';
+        stage.appendChild(vs);
+      }
+      const card = document.createElement('div');
+      card.className = 'hand-card';
+      card.id = `hand-${i}`;
+      card.innerHTML = `
+        <span class="hand-emoji" id="emoji-${i}">✊</span>
+        <div class="hand-name">${name}</div>
+        <div class="hand-move-label" id="move-${i}"></div>
+      `;
+      stage.appendChild(card);
+    });
+  }
+
+  function updateUI() {
+    document.getElementById('round-badge').textContent = `${round}라운드`;
+
+    if (activePlayers.length === 1) {
+      document.getElementById('round-status').textContent = '최후의 1인!';
+      document.getElementById('action-btn').disabled = true;
+      setTimeout(() => showResult(activePlayers[0]), 500);
+      return;
+    }
+
+    document.getElementById('round-status').textContent = `${activePlayers.length}명 남음`;
+    document.getElementById('action-btn').disabled = false;
+    document.getElementById('action-btn').textContent = '가위바위보!';
+
+    // Eliminated
+    if (eliminated.length > 0) {
+      document.getElementById('eliminated-section').style.display = 'block';
+      document.getElementById('eliminated-chips').innerHTML =
+        eliminated.map(n => `<div class="elim-chip">${n}</div>`).join('');
+    }
+  }
+
+  function doRound() {
+    if (animating) return;
+    animating = true;
+    document.getElementById('action-btn').disabled = true;
+
+    // Assign random moves
+    const moves = activePlayers.map(() => MOVES[Math.floor(Math.random() * 3)]);
+
+    // Start shaking animation
+    activePlayers.forEach((_, i) => {
+      const emoji = document.getElementById(`emoji-${i}`);
+      emoji.textContent = '✊';
+      emoji.classList.add('shaking');
+      document.getElementById(`move-${i}`).textContent = '';
+    });
+
+    // Shake for 1.2s then reveal
+    setTimeout(() => {
+      activePlayers.forEach((_, i) => {
+        const emoji = document.getElementById(`emoji-${i}`);
+        emoji.classList.remove('shaking');
+        emoji.textContent = EMOJIS[moves[i]];
+        document.getElementById(`move-${i}`).textContent = moves[i];
+      });
+
+      setTimeout(() => {
+        resolveRound(moves);
+        animating = false;
+      }, 400);
+    }, 1200);
+  }
+
+  function resolveRound(moves) {
+    const uniqueMoves = [...new Set(moves)];
+
+    // All same = tie
+    if (uniqueMoves.length === 1 || uniqueMoves.length === 3) {
+      activePlayers.forEach((_, i) => {
+        document.getElementById(`hand-${i}`).className = 'hand-card tie';
+      });
+      addLog(`${round}라운드: 🤝 무승부! 다시!`);
+      round++;
+      updateUI();
+      document.getElementById('action-btn').disabled = false;
+      return;
+    }
+
+    // Find losing move (2 unique moves case)
+    // winning move beats losing move
+    let winMove, loseMove;
+    if (uniqueMoves.length === 2) {
+      const [a, b] = uniqueMoves;
+      if (BEATS[a] === b) { winMove = a; loseMove = b; }
+      else                 { winMove = b; loseMove = a; }
+    }
+
+    const newActive = [];
+    const newElim = [];
+
+    activePlayers.forEach((name, i) => {
+      const card = document.getElementById(`hand-${i}`);
+      if (moves[i] === loseMove) {
+        card.className = 'hand-card loser';
+        newElim.push(name);
+        eliminated.push(name);
+        addLog(`${round}라운드: ❌ ${name} 탈락 (${moves[i]})`);
+      } else {
+        card.className = 'hand-card winner';
+        newActive.push(name);
+      }
+    });
+
+    if (newElim.length > 0) {
+      addLog(`${round}라운드 결과: ${newElim.join(', ')} 탈락`);
+    }
+
+    round++;
+
+    setTimeout(() => {
+      activePlayers = newActive;
+      updateUI();
+      renderStage();
+    }, 1200);
+  }
+
+  function addLog(msg) {
+    const log = document.getElementById('log-box');
+    log.innerHTML += `<div>${msg}</div>`;
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function showResult(loser) {
+    document.getElementById('result-name').textContent = loser;
+    document.getElementById('result-overlay').classList.add('show');
+  }
+
+  function resetGame() {
+    document.getElementById('result-overlay').classList.remove('show');
+    document.getElementById('setup-box').style.display = 'block';
+    document.getElementById('game-area').style.display = 'none';
+    document.querySelectorAll('.name-inputs input').forEach(i => i.value = '');
+    document.getElementById('eliminated-section').style.display = 'none';
+    document.getElementById('log-box').innerHTML = '';
+    round = 1;
+  }
+</script>
+</body>
+</html>
