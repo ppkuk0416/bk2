@@ -413,6 +413,8 @@
   let finished = [];
   let running = false;
   let animFrameId = null;
+  let boosterActive = [];    // 마지막 1명 부스터 여부
+  let boosterTriggered = false;
 
   // ── Setup ──────────────────────────────────────────────
   function startRace() {
@@ -457,6 +459,8 @@
     baseTargetSpeeds  = players.map(() => 0);
     currentSpeeds     = players.map(() => 0);
     speedEvents       = players.map(() => null);
+    boosterActive     = players.map(() => false);
+    boosterTriggered  = false;
     finished          = [];
     running           = false;
     players.forEach((_, i) => {
@@ -527,6 +531,8 @@
     currentSpeeds    = players.map((_, i) => baseTargetSpeeds[i]);
     speedEvents      = players.map(() => null);
     positions        = players.map(() => 0);
+    boosterActive    = players.map(() => false);
+    boosterTriggered = false;
     players.forEach((_, i) => setRunnerPos(i, 0));
 
     animFrameId = requestAnimationFrame(raceTick);
@@ -535,39 +541,60 @@
   function raceTick() {
     let allDone = true;
 
+    // ── 마지막 1명 남으면 부스터 발동 ──
+    if (!boosterTriggered && players.length > 1 && finished.length === players.length - 1) {
+      boosterTriggered = true;
+      const lastIdx = players.findIndex((_, i) => positions[i] < 1);
+      if (lastIdx !== -1) {
+        boosterActive[lastIdx] = true;
+        speedEvents[lastIdx] = null; // 기존 이벤트(비틀 등) 제거
+        showBoosterBubble(lastIdx);
+      }
+    }
+
     players.forEach((name, i) => {
       if (positions[i] >= 1) return;
       allDone = false;
 
       const prevSpeed = currentSpeeds[i];
 
-      // ── Speed event countdown ──
-      if (speedEvents[i]) {
-        speedEvents[i].framesLeft--;
-        if (speedEvents[i].framesLeft <= 0) speedEvents[i] = null;
-      }
+      // ── 부스터 중이면 랜덤 이벤트 스킵 ──
+      if (!boosterActive[i]) {
+        // ── Speed event countdown ──
+        if (speedEvents[i]) {
+          speedEvents[i].framesLeft--;
+          if (speedEvents[i].framesLeft <= 0) speedEvents[i] = null;
+        }
 
-      // ── Random event trigger (burst or stumble) ──
-      if (!speedEvents[i] && Math.random() < 0.004) {
-        const type = Math.random() < 0.45 ? 'burst' : 'stumble';
-        speedEvents[i] = {
-          type,
-          framesLeft: type === 'burst'
-            ? 55 + Math.floor(Math.random() * 65)
-            : 30 + Math.floor(Math.random() * 40)
-        };
-        showEventBubble(i, type);
+        // ── Random event trigger (burst or stumble) ──
+        if (!speedEvents[i] && Math.random() < 0.004) {
+          const type = Math.random() < 0.45 ? 'burst' : 'stumble';
+          speedEvents[i] = {
+            type,
+            framesLeft: type === 'burst'
+              ? 55 + Math.floor(Math.random() * 65)
+              : 30 + Math.floor(Math.random() * 40)
+          };
+          showEventBubble(i, type);
+        }
       }
 
       // ── Compute target speed with micro-turbulence ──
-      let target = baseTargetSpeeds[i] + (Math.random() - 0.5) * 0.00028;
-      if (speedEvents[i]) {
-        target *= speedEvents[i].type === 'burst' ? 2.6 : 0.18;
+      let target;
+      if (boosterActive[i]) {
+        // 부스터: 최대 속도의 8배로 돌진
+        target = SPEED_CAP_MAX * 8;
+      } else {
+        target = baseTargetSpeeds[i] + (Math.random() - 0.5) * 0.00028;
+        if (speedEvents[i]) {
+          target *= speedEvents[i].type === 'burst' ? 2.6 : 0.18;
+        }
+        target = Math.max(SPEED_CAP_MIN, Math.min(SPEED_CAP_MAX, target));
       }
-      target = Math.max(SPEED_CAP_MIN, Math.min(SPEED_CAP_MAX, target));
 
-      // ── Inertia: smooth acceleration toward target ──
-      currentSpeeds[i] = currentSpeeds[i] * 0.92 + target * 0.08;
+      // ── Inertia: 부스터는 빠르게 가속 ──
+      const inertia = boosterActive[i] ? 0.55 : 0.92;
+      currentSpeeds[i] = currentSpeeds[i] * inertia + target * (1 - inertia);
 
       positions[i] += currentSpeeds[i];
 
@@ -620,10 +647,17 @@
           body.style.transform = `translateY(${bounce}px) rotate(${tilt}deg) scaleX(${stretchX}) scaleY(${squishY})`;
         }
 
-        // ── Glow based on event ──
+        // ── Glow based on event / booster ──
         const runner = document.getElementById(`runner-${i}`);
         if (runner) {
-          if (speedEvents[i]?.type === 'burst') {
+          if (boosterActive[i]) {
+            // 부스터: 사이클링 무지개 글로우
+            const t2 = Date.now();
+            const r = Math.round(128 + 127 * Math.sin(t2 * 0.008));
+            const g = Math.round(128 + 127 * Math.sin(t2 * 0.008 + 2));
+            const b = Math.round(128 + 127 * Math.sin(t2 * 0.008 + 4));
+            runner.style.filter = `drop-shadow(0 0 18px rgba(${r},${g},${b},1)) drop-shadow(0 0 8px rgba(0,255,255,0.9))`;
+          } else if (speedEvents[i]?.type === 'burst') {
             runner.style.filter = 'drop-shadow(0 0 12px rgba(255,210,0,0.95)) drop-shadow(0 2px 4px rgba(0,0,0,0.5))';
           } else if (speedEvents[i]?.type === 'stumble') {
             runner.style.filter = 'drop-shadow(0 0 10px rgba(255,70,70,0.9)) drop-shadow(0 2px 4px rgba(0,0,0,0.5))';
@@ -632,8 +666,10 @@
           }
         }
 
-        // ── Dust particles for fast runners ──
-        if (speed > SPEED_CAP_MAX * 0.55 && Math.random() < 0.28) {
+        // ── Dust particles (부스터 중엔 훨씬 많이) ──
+        if (boosterActive[i]) {
+          if (Math.random() < 0.7) spawnDust(i, positions[i]);
+        } else if (speed > SPEED_CAP_MAX * 0.55 && Math.random() < 0.28) {
           spawnDust(i, positions[i]);
         }
       }
@@ -665,6 +701,29 @@
     dust.style.left = (px - 16) + 'px';
     track.appendChild(dust);
     setTimeout(() => dust.remove(), 700);
+  }
+
+  function showBoosterBubble(playerIndex) {
+    const runner = document.getElementById(`runner-${playerIndex}`);
+    if (!runner) return;
+    // 상태바 업데이트
+    document.getElementById('race-status').textContent = '🚀 부스터 발동!';
+    // 버블 3개 연속으로 띄우기
+    const messages = ['🚀 부스터!!', '💨 전속력!!', '⚡ 돌진!!'];
+    messages.forEach((msg, idx) => {
+      setTimeout(() => {
+        const runner2 = document.getElementById(`runner-${playerIndex}`);
+        if (!runner2) return;
+        const bubble = document.createElement('div');
+        bubble.className = 'event-bubble';
+        bubble.textContent = msg;
+        bubble.style.color = '#00ffff';
+        bubble.style.background = 'rgba(0,60,120,0.9)';
+        bubble.style.fontSize = '0.8rem';
+        runner2.appendChild(bubble);
+        setTimeout(() => bubble.remove(), 1500);
+      }, idx * 500);
+    });
   }
 
   function showEventBubble(playerIndex, type) {
