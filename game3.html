@@ -109,13 +109,12 @@
   .track {
     position: relative;
     margin-bottom: 12px;
-    height: 68px;
+    height: 72px;
     display: flex;
     align-items: center;
   }
   .track:last-child { margin-bottom: 0; }
 
-  /* Lane background */
   .lane-bg {
     position: absolute;
     top: 4px;
@@ -131,9 +130,9 @@
       rgba(255,255,255,0.06) 60px
     );
     border: 1px solid rgba(255,255,255,0.06);
+    overflow: hidden;
   }
 
-  /* Finish line */
   .finish-line {
     position: absolute;
     top: 0;
@@ -166,17 +165,16 @@
 
   .capybara-runner {
     position: absolute;
-    left: 90px; /* start after label */
+    left: 90px;
     top: 50%;
     transform: translateY(-50%);
     font-size: 2.2rem;
-    transition: left 0.15s linear;
     z-index: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
     line-height: 1;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    /* No CSS transition – JS handles frame-by-frame animation */
   }
 
   .capybara-name-tag {
@@ -189,7 +187,43 @@
     margin-top: 2px;
   }
 
-  /* Rank badge on finish */
+  /* Dust particles */
+  .dust-particle {
+    position: absolute;
+    pointer-events: none;
+    z-index: 1;
+    top: 50%;
+    font-size: 0.75rem;
+    opacity: 0.9;
+    animation: dustFade 0.65s ease-out forwards;
+  }
+  @keyframes dustFade {
+    0%   { opacity: 0.9; transform: translateY(-50%) scale(1) translateX(0); }
+    100% { opacity: 0;   transform: translateY(calc(-50% - 14px)) scale(0.3) translateX(-10px); }
+  }
+
+  /* Event bubble */
+  .event-bubble {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    font-size: 0.68rem;
+    font-weight: 700;
+    pointer-events: none;
+    z-index: 10;
+    white-space: nowrap;
+    background: rgba(0,0,0,0.72);
+    padding: 2px 7px;
+    border-radius: 8px;
+    animation: bubblePop 1.5s ease-out forwards;
+  }
+  @keyframes bubblePop {
+    0%   { opacity: 1; transform: translateX(-50%) translateY(0)    scale(1);   }
+    15%  {             transform: translateX(-50%) translateY(-5px)  scale(1.12); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-22px) scale(0.8); }
+  }
+
+  /* Rank badge */
   .rank-badge {
     position: absolute;
     right: 14px;
@@ -286,10 +320,29 @@
     font-family: 'Noto Sans KR', sans-serif;
   }
 
-  /* Confetti-like celebration on last */
-  @keyframes slowPulse {
-    0%,100% { transform: scale(1); }
-    50%      { transform: scale(1.05); }
+  /* Countdown overlay */
+  .countdown-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 50;
+    align-items: center;
+    justify-content: center;
+  }
+  .countdown-overlay.show { display: flex; }
+  .countdown-number {
+    font-size: 9rem;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 0 40px rgba(100,255,150,0.8);
+    animation: countPop 0.9s ease-out;
+  }
+  @keyframes countPop {
+    0%   { transform: scale(2);   opacity: 0; }
+    30%  { transform: scale(1);   opacity: 1; }
+    80%  { transform: scale(1);   opacity: 1; }
+    100% { transform: scale(0.6); opacity: 0; }
   }
 </style>
 </head>
@@ -320,12 +373,14 @@
   <div class="race-header">
     <div class="race-status" id="race-status">🏁 출발 준비!</div>
   </div>
-
   <div class="track-container" id="track-container"></div>
-
-  <button class="action-btn" id="action-btn" onclick="goRace()">🦫 출발!</button>
-
+  <button class="action-btn" id="action-btn" onclick="beginCountdown()">🦫 출발!</button>
   <div class="arrival-log" id="arrival-log"></div>
+</div>
+
+<!-- Countdown overlay -->
+<div class="countdown-overlay" id="countdown-overlay">
+  <div class="countdown-number" id="countdown-number">3</div>
 </div>
 
 <!-- Result overlay -->
@@ -340,18 +395,25 @@
 </div>
 
 <script>
-  // Different capybara colors/variants using emoji combos
   const CAPYBARAS = ['🦫','🦫','🦫','🦫','🦫','🦫','🦫','🦫'];
   const COLORS = ['#FFD700','#FF6B6B','#44AAFF','#AA44FF','#FF9944','#44FFAA','#FF44AA','#44FFFF'];
 
+  // Speed halved from original → race takes ~2x longer
+  const BASE_SPEED_MIN = 0.0004;
+  const BASE_SPEED_MAX = 0.0015;
+  const SPEED_CAP_MAX  = 0.0022;
+  const SPEED_CAP_MIN  = 0.00012;
+
   let players = [];
-  let positions = []; // 0 to 1
-  let speeds = [];    // current speed per frame
-  let finished = [];  // order of finish (index)
+  let positions = [];
+  let baseTargetSpeeds = [];
+  let currentSpeeds = [];
+  let speedEvents = [];   // null | { type:'burst'|'stumble', framesLeft }
+  let finished = [];
   let running = false;
   let animFrameId = null;
-  let trackWidth = 0;
 
+  // ── Setup ──────────────────────────────────────────────
   function startRace() {
     const ids = ['p1','p2','p3','p4','p5','p6','p7','p8'];
     players = ids.map(id => document.getElementById(id).value.trim()).filter(Boolean);
@@ -371,12 +433,10 @@
   function buildTracks() {
     const container = document.getElementById('track-container');
     container.innerHTML = '';
-
     players.forEach((name, i) => {
       const track = document.createElement('div');
       track.className = 'track';
       track.id = `track-${i}`;
-
       track.innerHTML = `
         <div class="lane-bg"></div>
         <div class="finish-line"></div>
@@ -387,27 +447,23 @@
         </div>
         <div class="rank-badge rank-${i+1}" id="rank-${i}"></div>
       `;
-
       container.appendChild(track);
-    });
-
-    // Measure track usable width
-    requestAnimationFrame(() => {
-      const lane = document.querySelector('.lane-bg');
-      if (lane) {
-        trackWidth = lane.offsetWidth - 50; // 50px buffer for capybara size
-      }
     });
   }
 
   function resetPositions() {
-    positions = players.map(() => 0);
-    speeds = players.map(() => 0);
-    finished = [];
-    running = false;
-
+    positions         = players.map(() => 0);
+    baseTargetSpeeds  = players.map(() => 0);
+    currentSpeeds     = players.map(() => 0);
+    speedEvents       = players.map(() => null);
+    finished          = [];
+    running           = false;
     players.forEach((_, i) => {
       setRunnerPos(i, 0);
+      const body = document.getElementById(`runner-${i}`)?.querySelector('.cap-body');
+      if (body) { body.style.transform = ''; body.style.filter = ''; }
+      const runner = document.getElementById(`runner-${i}`);
+      if (runner) runner.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))';
       const rank = document.getElementById(`rank-${i}`);
       if (rank) { rank.className = `rank-badge rank-${i+1}`; rank.textContent = ''; }
     });
@@ -418,117 +474,229 @@
     if (!runner) return;
     const lane = document.querySelector(`#track-${i} .lane-bg`);
     const laneW = lane ? lane.offsetWidth : 500;
-    const maxPx = laneW - 50;
-    const px = 90 + frac * maxPx; // 90px = label width
+    const px = 90 + frac * (laneW - 50);
     runner.style.left = px + 'px';
-
-    // Flip when moving
-    const body = runner.querySelector('.cap-body');
-    if (body) body.style.transform = frac > 0 && frac < 1 ? 'scaleX(1)' : 'scaleX(1)';
   }
 
-  function goRace() {
-    if (running) return;
-    running = true;
+  // ── Countdown ──────────────────────────────────────────
+  function beginCountdown() {
     document.getElementById('action-btn').disabled = true;
-    document.getElementById('race-status').textContent = '🦫 달리는 중...';
     document.getElementById('arrival-log').innerHTML = '';
-    finished = [];
 
-    // Assign base speeds - random between 0.0008 and 0.003 per frame
-    // Lower speed = slower = loser target
-    speeds = players.map(() => (Math.random() * 0.0022 + 0.0008));
-    positions = players.map(() => 0);
-
-    players.forEach((_, i) => setRunnerPos(i, 0));
-
-    // Reset ranks
+    // Reset rank badges
     players.forEach((_, i) => {
       const rank = document.getElementById(`rank-${i}`);
       if (rank) { rank.className = `rank-badge rank-${i+1}`; rank.textContent = ''; }
     });
 
+    const overlay = document.getElementById('countdown-overlay');
+    const numEl   = document.getElementById('countdown-number');
+
+    let count = 3;
+    overlay.classList.add('show');
+
+    function tick() {
+      numEl.style.animation = 'none';
+      numEl.offsetHeight; // reflow to restart animation
+      numEl.style.animation = 'countPop 0.9s ease-out';
+      numEl.textContent = count > 0 ? count : 'GO!';
+      numEl.style.color = count > 0 ? '#fff' : '#66ff99';
+
+      if (count <= 0) {
+        setTimeout(() => {
+          overlay.classList.remove('show');
+          goRace();
+        }, 700);
+      } else {
+        count--;
+        setTimeout(tick, 950);
+      }
+    }
     tick();
   }
 
-  function tick() {
+  // ── Race ───────────────────────────────────────────────
+  function goRace() {
+    if (running) return;
+    running  = true;
+    finished = [];
+    document.getElementById('race-status').textContent = '🦫 달리는 중...';
+
+    baseTargetSpeeds = players.map(() => BASE_SPEED_MIN + Math.random() * (BASE_SPEED_MAX - BASE_SPEED_MIN));
+    currentSpeeds    = players.map((_, i) => baseTargetSpeeds[i]);
+    speedEvents      = players.map(() => null);
+    positions        = players.map(() => 0);
+    players.forEach((_, i) => setRunnerPos(i, 0));
+
+    animFrameId = requestAnimationFrame(raceTick);
+  }
+
+  function raceTick() {
     let allDone = true;
 
     players.forEach((name, i) => {
-      if (positions[i] >= 1) return; // already done
-
+      if (positions[i] >= 1) return;
       allDone = false;
 
-      // Add some turbulence (random acceleration)
-      const turbulence = (Math.random() - 0.48) * 0.001;
-      speeds[i] = Math.max(0.0003, Math.min(0.004, speeds[i] + turbulence));
+      const prevSpeed = currentSpeeds[i];
 
-      positions[i] += speeds[i];
+      // ── Speed event countdown ──
+      if (speedEvents[i]) {
+        speedEvents[i].framesLeft--;
+        if (speedEvents[i].framesLeft <= 0) speedEvents[i] = null;
+      }
+
+      // ── Random event trigger (burst or stumble) ──
+      if (!speedEvents[i] && Math.random() < 0.004) {
+        const type = Math.random() < 0.45 ? 'burst' : 'stumble';
+        speedEvents[i] = {
+          type,
+          framesLeft: type === 'burst'
+            ? 55 + Math.floor(Math.random() * 65)
+            : 30 + Math.floor(Math.random() * 40)
+        };
+        showEventBubble(i, type);
+      }
+
+      // ── Compute target speed with micro-turbulence ──
+      let target = baseTargetSpeeds[i] + (Math.random() - 0.5) * 0.00028;
+      if (speedEvents[i]) {
+        target *= speedEvents[i].type === 'burst' ? 2.6 : 0.18;
+      }
+      target = Math.max(SPEED_CAP_MIN, Math.min(SPEED_CAP_MAX, target));
+
+      // ── Inertia: smooth acceleration toward target ──
+      currentSpeeds[i] = currentSpeeds[i] * 0.92 + target * 0.08;
+
+      positions[i] += currentSpeeds[i];
 
       if (positions[i] >= 1) {
+        // ── Finished! ──
         positions[i] = 1;
         finished.push(i);
         setRunnerPos(i, 1);
 
-        const place = finished.length;
-        const rank = document.getElementById(`rank-${i}`);
-        const medals = ['🥇','🥈','🥉'];
+        const place   = finished.length;
+        const rank    = document.getElementById(`rank-${i}`);
+        const medals  = ['🥇','🥈','🥉'];
         if (rank) {
-          rank.className = `rank-badge rank-${place} show`;
-          rank.textContent = medals[place-1] || place;
+          rank.className  = `rank-badge rank-${place} show`;
+          rank.textContent = medals[place - 1] || place;
         }
+
+        // Reset body animation on finish
+        const body = document.getElementById(`runner-${i}`)?.querySelector('.cap-body');
+        if (body) body.style.transform = '';
+        const runner = document.getElementById(`runner-${i}`);
+        if (runner) runner.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))';
 
         addArrivalLog(place, name);
       } else {
         setRunnerPos(i, positions[i]);
-      }
-    });
 
-    // Animate body bounce
-    players.forEach((_, i) => {
-      if (positions[i] < 1) {
+        // ── Lively body animation ──
+        const t      = Date.now();
+        const speed  = currentSpeeds[i];
+        const accel  = speed - prevSpeed;
+
+        // Bounce frequency proportional to speed (4–10 Hz range)
+        const freq      = 0.002 + speed * 5;
+        const bounceAmp = 2.5 + speed * 800;
+        const bounce    = Math.sin(t * freq + i * 1.5) * bounceAmp;
+
+        // Lateral sway (slower than bounce)
+        const sway  = Math.sin(t * freq * 0.55 + i * 2.1) * 2.2;
+
+        // Forward tilt from acceleration
+        const tilt  = Math.max(-20, Math.min(20, accel * 90000 + sway));
+
+        // Stretch when fast
+        const stretchX = 1 + Math.max(0, (speed - 0.0009) * 110);
+        const squishY  = 1 - Math.max(0, (speed - 0.0009) * 32);
+
         const body = document.getElementById(`runner-${i}`)?.querySelector('.cap-body');
         if (body) {
-          const bounce = Math.sin(Date.now() * 0.015 + i) * 3;
-          body.style.transform = `translateY(${bounce}px)`;
+          body.style.transform = `translateY(${bounce}px) rotate(${tilt}deg) scaleX(${stretchX}) scaleY(${squishY})`;
+        }
+
+        // ── Glow based on event ──
+        const runner = document.getElementById(`runner-${i}`);
+        if (runner) {
+          if (speedEvents[i]?.type === 'burst') {
+            runner.style.filter = 'drop-shadow(0 0 12px rgba(255,210,0,0.95)) drop-shadow(0 2px 4px rgba(0,0,0,0.5))';
+          } else if (speedEvents[i]?.type === 'stumble') {
+            runner.style.filter = 'drop-shadow(0 0 10px rgba(255,70,70,0.9)) drop-shadow(0 2px 4px rgba(0,0,0,0.5))';
+          } else {
+            runner.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))';
+          }
+        }
+
+        // ── Dust particles for fast runners ──
+        if (speed > SPEED_CAP_MAX * 0.55 && Math.random() < 0.28) {
+          spawnDust(i, positions[i]);
         }
       }
     });
 
-    if (finished.length === players.length) {
-      allDone = true;
-    }
+    if (finished.length === players.length) allDone = true;
 
     if (!allDone) {
-      animFrameId = requestAnimationFrame(tick);
+      animFrameId = requestAnimationFrame(raceTick);
     } else {
       running = false;
-      // Last one to finish = loser
-      const lastIndex = finished[finished.length - 1];
       document.getElementById('race-status').textContent = '🏁 결승!';
-      setTimeout(() => showResult(lastIndex), 800);
+      setTimeout(() => showResult(finished[finished.length - 1]), 800);
     }
+  }
+
+  // ── Helpers ────────────────────────────────────────────
+  function spawnDust(playerIndex, position) {
+    const track = document.getElementById(`track-${playerIndex}`);
+    if (!track) return;
+    const lane  = track.querySelector('.lane-bg');
+    const laneW = lane ? lane.offsetWidth : 500;
+    const px    = 90 + position * (laneW - 50);
+
+    const dust = document.createElement('div');
+    dust.className = 'dust-particle';
+    const symbols = ['💨', '·', '˙', '∘', '•'];
+    dust.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+    dust.style.left = (px - 16) + 'px';
+    track.appendChild(dust);
+    setTimeout(() => dust.remove(), 700);
+  }
+
+  function showEventBubble(playerIndex, type) {
+    const runner = document.getElementById(`runner-${playerIndex}`);
+    if (!runner) return;
+    const bubble = document.createElement('div');
+    bubble.className = 'event-bubble';
+    if (type === 'burst') {
+      bubble.textContent = '💨 스퍼트!';
+      bubble.style.color = '#FFD700';
+    } else {
+      bubble.textContent = '😵 비틀!';
+      bubble.style.color = '#FF6B6B';
+    }
+    runner.appendChild(bubble);
+    setTimeout(() => bubble.remove(), 1500);
   }
 
   function addArrivalLog(place, name) {
     const medals = ['🥇','🥈','🥉'];
-    const icon = medals[place-1] || `${place}위`;
-    const log = document.getElementById('arrival-log');
+    const icon   = medals[place - 1] || `${place}위`;
+    const log    = document.getElementById('arrival-log');
     log.innerHTML += `<div>${icon} ${place}등: <strong>${name}</strong></div>`;
   }
 
   function showResult(loserIndex) {
-    const loser = players[loserIndex];
-    document.getElementById('result-name').textContent = loser;
-
-    // Build order string
+    document.getElementById('result-name').textContent = players[loserIndex];
     const orderLines = finished.map((idx, rank) => {
       const medals = ['🥇','🥈','🥉'];
-      const icon = medals[rank] || `${rank+1}위`;
+      const icon   = medals[rank] || `${rank + 1}위`;
       return `${icon} ${players[idx]}`;
     });
     document.getElementById('result-order').innerHTML = orderLines.join('<br>');
-
     document.getElementById('result-overlay').classList.add('show');
   }
 
