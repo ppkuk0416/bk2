@@ -33,20 +33,10 @@
   }
   .back-btn:hover { background: rgba(255,255,255,0.2); }
 
-  h1 {
-    font-size: 2rem;
-    font-weight: 900;
-    text-align: center;
-    margin-bottom: 6px;
-  }
-  .subtitle {
-    color: rgba(255,255,255,0.5);
-    font-size: 0.9rem;
-    margin-bottom: 30px;
-    text-align: center;
-  }
+  h1 { font-size: 2rem; font-weight: 900; text-align: center; margin-bottom: 6px; }
+  .subtitle { color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-bottom: 30px; text-align: center; }
 
-  /* === Setup === */
+  /* Setup */
   .setup-box {
     background: rgba(255,255,255,0.07);
     border: 1px solid rgba(255,255,255,0.12);
@@ -57,7 +47,6 @@
     margin-bottom: 30px;
   }
   .setup-box h3 { font-size: 1rem; margin-bottom: 14px; color: rgba(255,255,255,0.8); }
-
   .name-inputs {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -96,60 +85,104 @@
   .btn-start:hover { opacity: 0.9; transform: translateY(-1px); }
   .btn-start:active { transform: translateY(0); }
 
-  /* === Game Area === */
+  /* Game Area */
   #game-area { display: none; width: 100%; max-width: 600px; }
 
-  .turn-info {
-    text-align: center;
-    margin-bottom: 20px;
-  }
+  .turn-info { text-align: center; margin-bottom: 20px; }
   .turn-info .current-player {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #ffdd44;
-    margin-bottom: 4px;
+    font-size: 1.4rem; font-weight: 700; color: #ffdd44; margin-bottom: 4px;
   }
-  .turn-info .hint {
-    font-size: 0.85rem;
-    color: rgba(255,255,255,0.5);
-  }
+  .turn-info .hint { font-size: 0.85rem; color: rgba(255,255,255,0.5); }
 
-  /* === Barrel SVG area === */
+  /* Barrel area */
   .barrel-wrap {
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-end;
     margin-bottom: 24px;
-    position: relative;
+    height: 400px;
   }
 
-  .barrel-svg-container {
+  .barrel-scene {
     position: relative;
     width: 320px;
-    height: 360px;
+    height: 390px;
   }
 
-  /* Holes grid */
+  /* Jack Sparrow */
+  .jack {
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 110px;
+    height: 150px;
+    z-index: 10;
+    cursor: default;
+  }
+  .jack.hidden {
+    top: 50px;
+    opacity: 0;
+    transform: translateX(-50%) scale(0.2);
+    pointer-events: none;
+  }
+  .jack.pop {
+    animation:
+      jack-pop 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards,
+      jack-sway 2.2s ease-in-out 0.75s infinite;
+  }
+  @keyframes jack-pop {
+    0%   { top: 50px; opacity: 0; transform: translateX(-50%) scale(0.2) rotate(-15deg); }
+    55%  { top: -18px; opacity: 1; transform: translateX(-50%) scale(1.3) rotate(8deg); }
+    75%  { top: -8px;  transform: translateX(-50%) scale(1.08) rotate(-3deg); }
+    100% { top: -8px;  opacity: 1; transform: translateX(-50%) scale(1.05) rotate(0deg); }
+  }
+  @keyframes jack-sway {
+    0%   { transform: translateX(-50%) scale(1.05) rotate(-6deg); }
+    50%  { transform: translateX(-50%) scale(1.05) rotate(6deg); }
+    100% { transform: translateX(-50%) scale(1.05) rotate(-6deg); }
+  }
+
+  /* Barrel shake - reduced */
+  .shake {
+    animation: barrel-shake 0.35s ease-out;
+  }
+  @keyframes barrel-shake {
+    0%,100% { transform: translateX(0) rotate(0); }
+    20%     { transform: translateX(-3px) rotate(-0.4deg); }
+    40%     { transform: translateX(3px)  rotate(0.4deg); }
+    60%     { transform: translateX(-2px) rotate(-0.2deg); }
+    80%     { transform: translateX(2px)  rotate(0.2deg); }
+  }
+
+  /* Holes grid - positioned over barrel body */
   .holes-grid {
     position: absolute;
-    top: 100px;
+    top: 115px;
     left: 50%;
     transform: translateX(-50%);
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
     width: 240px;
+    z-index: 5;
   }
 
   .hole-btn {
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    border: 3px solid rgba(255,255,255,0.2);
-    background: rgba(0,0,0,0.4);
+    border: none;
+    background:
+      radial-gradient(circle at 40% 35%, rgba(255,180,80,0.08) 0%, transparent 55%),
+      radial-gradient(circle at center, #0d0803 25%, #1c0f06 60%, #2e1c0a 100%);
+    box-shadow:
+      inset 3px 3px 7px rgba(0,0,0,0.9),
+      inset -1px -1px 3px rgba(255,160,60,0.1),
+      0 1px 4px rgba(0,0,0,0.6);
     cursor: pointer;
     position: relative;
-    transition: all 0.2s;
+    transition: all 0.18s;
     font-size: 1.4rem;
     display: flex;
     align-items: center;
@@ -157,70 +190,20 @@
     overflow: hidden;
   }
   .hole-btn:hover:not(.used) {
-    border-color: rgba(255,100,100,0.8);
-    background: rgba(255,50,50,0.2);
+    box-shadow:
+      inset 3px 3px 7px rgba(0,0,0,0.9),
+      0 0 14px rgba(255,80,80,0.55),
+      0 0 5px rgba(255,80,80,0.9);
     transform: scale(1.1);
   }
-  .hole-btn.used {
-    cursor: not-allowed;
-    opacity: 0.7;
-  }
+  .hole-btn.used { cursor: not-allowed; }
   .hole-btn.has-knife {
-    border-color: rgba(200,150,50,0.8);
-    background: rgba(200,150,50,0.15);
+    background: radial-gradient(circle at center, #130a04 30%, #2e1c0a 100%);
+    box-shadow:
+      inset 3px 3px 7px rgba(0,0,0,0.9),
+      0 0 8px rgba(200,150,50,0.3);
   }
-
-  .knife-svg {
-    width: 30px;
-    height: 30px;
-  }
-
-  /* Barrel illustration */
-  .barrel-body {
-    position: absolute;
-    top: 60px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 270px;
-    height: 260px;
-  }
-
-  /* Uncle on top */
-  .uncle {
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 3.5rem;
-    transition: all 0.1s;
-    z-index: 10;
-    cursor: default;
-  }
-  .uncle.hidden {
-    top: 30px;
-    opacity: 0;
-    filter: blur(2px);
-  }
-  .uncle.pop {
-    animation: pop-up 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-  }
-
-  @keyframes pop-up {
-    0%   { top: 30px; opacity: 0; transform: translateX(-50%) scale(0.5) rotate(-10deg); }
-    60%  { top: -30px; transform: translateX(-50%) scale(1.3) rotate(5deg); }
-    100% { top: -20px; opacity: 1; transform: translateX(-50%) scale(1.1) rotate(0deg); }
-  }
-
-  .shake {
-    animation: shake 0.4s;
-  }
-  @keyframes shake {
-    0%,100% { transform: translateX(-50%); }
-    20%     { transform: translateX(calc(-50% - 8px)); }
-    40%     { transform: translateX(calc(-50% + 8px)); }
-    60%     { transform: translateX(calc(-50% - 5px)); }
-    80%     { transform: translateX(calc(-50% + 5px)); }
-  }
+  .knife-svg { width: 32px; height: 32px; }
 
   /* Player list */
   .players-list {
@@ -244,17 +227,14 @@
     border-color: #ff4444;
     color: #ffaaaa;
   }
-  .player-chip.out {
-    opacity: 0.35;
-    text-decoration: line-through;
-  }
+  .player-chip.out { opacity: 0.35; text-decoration: line-through; }
 
   /* Result overlay */
   .result-overlay {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.85);
+    background: rgba(0,0,0,0.9);
     z-index: 100;
     flex-direction: column;
     align-items: center;
@@ -265,11 +245,15 @@
   .result-overlay.show { display: flex; }
 
   @keyframes result-pop {
-    0%   { opacity: 0; transform: scale(0.3) rotate(-15deg); }
-    60%  { transform: scale(1.35) rotate(8deg); }
+    0%   { opacity: 0; transform: scale(0.2) rotate(-20deg); }
+    55%  { transform: scale(1.4) rotate(10deg); }
+    75%  { transform: scale(1.05) rotate(-4deg); }
     100% { opacity: 1; transform: scale(1.1) rotate(0deg); }
   }
-  .result-emoji { font-size: 6rem; margin-bottom: 20px; animation: result-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+  .result-jack {
+    margin-bottom: 20px;
+    animation: result-pop 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
   .result-title { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; color: #ff4444; }
   .result-name  { font-size: 1.8rem; font-weight: 700; color: #ffdd44; margin-bottom: 30px; }
 
@@ -291,20 +275,20 @@
 
 <a href="index.html" class="back-btn">← 홈으로</a>
 <h1>🗡️ 통아저씨 게임</h1>
-<p class="subtitle">칼을 꽂다가 통아저씨가 튀어나오면 당첨!</p>
+<p class="subtitle">칼을 꽂다가 잭 스패로우가 튀어나오면 당첨!</p>
 
 <!-- Setup -->
 <div class="setup-box" id="setup-box">
   <h3>참가자 이름 입력 (최소 2명, 최대 8명)</h3>
   <div class="name-inputs">
-    <input type="text" placeholder="1번 참가자" id="p1" value="">
-    <input type="text" placeholder="2번 참가자" id="p2" value="">
-    <input type="text" placeholder="3번 참가자" id="p3" value="">
-    <input type="text" placeholder="4번 참가자" id="p4" value="">
-    <input type="text" placeholder="5번 참가자" id="p5" value="">
-    <input type="text" placeholder="6번 참가자" id="p6" value="">
-    <input type="text" placeholder="7번 참가자" id="p7" value="">
-    <input type="text" placeholder="8번 참가자" id="p8" value="">
+    <input type="text" placeholder="1번 참가자" id="p1">
+    <input type="text" placeholder="2번 참가자" id="p2">
+    <input type="text" placeholder="3번 참가자" id="p3">
+    <input type="text" placeholder="4번 참가자" id="p4">
+    <input type="text" placeholder="5번 참가자" id="p5">
+    <input type="text" placeholder="6번 참가자" id="p6">
+    <input type="text" placeholder="7번 참가자" id="p7">
+    <input type="text" placeholder="8번 참가자" id="p8">
   </div>
   <button class="btn-start" onclick="startGame()">게임 시작!</button>
 </div>
@@ -319,34 +303,193 @@
   <div class="players-list" id="players-list"></div>
 
   <div class="barrel-wrap">
-    <div class="barrel-svg-container" id="barrel-container">
+    <div class="barrel-scene" id="barrel-scene">
 
-      <!-- Uncle -->
-      <div class="uncle hidden" id="uncle">🧔</div>
+      <!-- Jack Sparrow SVG Character -->
+      <div class="jack hidden" id="jack">
+        <svg width="110" height="150" viewBox="0 0 110 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Dreads left -->
+          <path d="M24,58 Q10,82 13,112" stroke="#3a2800" stroke-width="5.5" stroke-linecap="round" fill="none"/>
+          <path d="M29,60 Q17,88 19,118" stroke="#2a1800" stroke-width="4" stroke-linecap="round" fill="none"/>
+          <path d="M26,63 Q14,92 16,115" stroke="#4a3800" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Bead left -->
+          <circle cx="14" cy="109" r="4.5" fill="#9a7a1a"/>
+          <circle cx="14" cy="109" r="4.5" fill="none" stroke="#6a5010" stroke-width="1"/>
+          <!-- Dreads right -->
+          <path d="M86,58 Q100,82 97,112" stroke="#3a2800" stroke-width="5.5" stroke-linecap="round" fill="none"/>
+          <path d="M81,60 Q93,88 91,118" stroke="#2a1800" stroke-width="4" stroke-linecap="round" fill="none"/>
+          <path d="M84,63 Q96,92 94,115" stroke="#4a3800" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Bead right -->
+          <circle cx="96" cy="109" r="4.5" fill="#9a7a1a"/>
+          <circle cx="96" cy="109" r="4.5" fill="none" stroke="#6a5010" stroke-width="1"/>
 
-      <!-- Barrel SVG -->
-      <svg class="barrel-body" viewBox="0 0 270 260" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- Main barrel body -->
-        <ellipse cx="135" cy="240" rx="110" ry="18" fill="#5C3317" opacity="0.6"/>
-        <rect x="30" y="60" width="210" height="185" rx="20" fill="#8B5E3C"/>
-        <rect x="30" y="60" width="210" height="185" rx="20" fill="url(#woodGrain)"/>
-        <!-- Barrel bands -->
-        <rect x="24" y="90"  width="222" height="14" rx="7" fill="#5C3317"/>
-        <rect x="24" y="155" width="222" height="14" rx="7" fill="#5C3317"/>
-        <rect x="24" y="220" width="222" height="14" rx="7" fill="#5C3317"/>
-        <!-- Top ellipse -->
-        <ellipse cx="135" cy="62" rx="105" ry="22" fill="#A0703A"/>
-        <ellipse cx="135" cy="58" rx="95"  ry="18" fill="#B8854A"/>
-        <!-- Highlight -->
-        <rect x="42" y="70"  width="8"  height="170" rx="4" fill="rgba(255,255,255,0.12)"/>
+          <!-- Pirate hat - tricorn shape -->
+          <path d="M55,4 L14,44 L96,44 Z" fill="#1a1a1a"/>
+          <path d="M16,40 L94,40 L96,48 L14,48 Z" fill="#252525"/>
+          <ellipse cx="55" cy="47" rx="41" ry="9" fill="#1e1e1e"/>
+          <!-- Hat brim shine -->
+          <path d="M16,42 Q55,38 94,42" fill="none" stroke="#404040" stroke-width="1.5"/>
+          <!-- Feather -->
+          <path d="M80,10 Q96,2 100,9 Q91,22 76,28 Q85,16 80,10" fill="#9B1010" opacity="0.95"/>
+          <path d="M80,10 Q91,8 93,13 Q87,20 78,25" fill="#cc2222" opacity="0.5"/>
+          <!-- Hat skull badge -->
+          <text x="35" y="44" font-size="9" fill="rgba(255,255,255,0.2)">☠</text>
+
+          <!-- Bandana/headband -->
+          <rect x="22" y="46" width="66" height="10" rx="5" fill="#8B0010" opacity="0.9"/>
+          <path d="M22,52 Q55,57 88,52" stroke="#cc1122" stroke-width="1.5" fill="none" opacity="0.5"/>
+
+          <!-- Face -->
+          <ellipse cx="55" cy="74" rx="29" ry="31" fill="#d4a574"/>
+          <!-- Face shading (right side in shadow) -->
+          <ellipse cx="70" cy="74" rx="17" ry="26" fill="#b8885a" opacity="0.35"/>
+
+          <!-- Kohl left eye -->
+          <ellipse cx="44" cy="70" rx="8.5" ry="7.5" fill="#fff"/>
+          <ellipse cx="44" cy="70" rx="10" ry="9" fill="none" stroke="#1a0800" stroke-width="2.5" opacity="0.65"/>
+          <circle cx="45" cy="71" r="5" fill="#251000"/>
+          <circle cx="47" cy="69" r="1.8" fill="#fff"/>
+
+          <!-- Kohl right eye -->
+          <ellipse cx="66" cy="70" rx="8.5" ry="7.5" fill="#fff"/>
+          <ellipse cx="66" cy="70" rx="10" ry="9" fill="none" stroke="#1a0800" stroke-width="2.5" opacity="0.65"/>
+          <circle cx="67" cy="71" r="5" fill="#251000"/>
+          <circle cx="69" cy="69" r="1.8" fill="#fff"/>
+
+          <!-- Nose -->
+          <path d="M52,79 Q55,86 58,79" stroke="#b07848" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+
+          <!-- Mustache -->
+          <path d="M46,86 Q51,84 55,85 Q59,84 64,86" stroke="#2a1500" stroke-width="3" stroke-linecap="round" fill="none"/>
+
+          <!-- Smirk mouth -->
+          <path d="M48,92 Q55,100 64,92" stroke="#7a3a18" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+
+          <!-- Beard area shading -->
+          <ellipse cx="55" cy="98" rx="21" ry="13" fill="#b88050" opacity="0.4"/>
+
+          <!-- Beard braids -->
+          <path d="M47,100 Q45,113 47,126" stroke="#251500" stroke-width="4" stroke-linecap="round" fill="none"/>
+          <path d="M63,100 Q65,113 63,126" stroke="#251500" stroke-width="4" stroke-linecap="round" fill="none"/>
+          <!-- Bead on beard braids -->
+          <circle cx="47" cy="124" r="3.5" fill="#9a7a1a"/>
+          <circle cx="63" cy="124" r="3.5" fill="#9a7a1a"/>
+
+          <!-- Coat body -->
+          <path d="M26,107 Q30,132 33,150 L77,150 Q80,132 84,107 Q70,99 55,99 Q40,99 26,107 Z" fill="#3a1858"/>
+          <!-- Coat lapels / V-collar -->
+          <path d="M41,107 L55,118 L69,107" fill="#2e1245"/>
+          <line x1="41" y1="107" x2="55" y2="118" stroke="#5a2888" stroke-width="1.5"/>
+          <line x1="69" y1="107" x2="55" y2="118" stroke="#5a2888" stroke-width="1.5"/>
+          <!-- Coat center seam -->
+          <line x1="55" y1="118" x2="55" y2="150" stroke="#2e1245" stroke-width="1.5"/>
+          <!-- Coat highlights -->
+          <path d="M29,110 Q31,130 33,148" stroke="#5a2888" stroke-width="1.5" fill="none" opacity="0.45"/>
+          <path d="M81,110 Q79,130 77,148" stroke="#5a2888" stroke-width="1.5" fill="none" opacity="0.3"/>
+
+          <!-- White shirt peek -->
+          <path d="M44,107 Q55,120 66,107" fill="#e8d8a0" opacity="0.75"/>
+
+          <!-- Gold buttons -->
+          <circle cx="55" cy="127" r="4" fill="#c8a020"/>
+          <circle cx="55" cy="127" r="4" fill="none" stroke="#a07810" stroke-width="1"/>
+          <circle cx="55" cy="140" r="4" fill="#c8a020"/>
+          <circle cx="55" cy="140" r="4" fill="none" stroke="#a07810" stroke-width="1"/>
+
+          <!-- Rum bottle (right hand) -->
+          <rect x="81" y="118" width="11" height="26" rx="5.5" fill="#2a7a28" opacity="0.85"/>
+          <rect x="83" y="110" width="7" height="11" rx="3.5" fill="#227020" opacity="0.9"/>
+          <rect x="84" y="107" width="5" height="6" rx="1.5" fill="#999"/>
+        </svg>
+      </div>
+
+      <!-- 3D Barrel SVG -->
+      <svg style="position:absolute; top:65px; left:50%; transform:translateX(-50%);"
+           width="275" height="295" viewBox="0 0 275 295" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <linearGradient id="woodGrain" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%"   stop-color="rgba(0,0,0,0.15)"/>
-            <stop offset="20%"  stop-color="rgba(255,255,255,0.05)"/>
-            <stop offset="80%"  stop-color="rgba(255,255,255,0.05)"/>
-            <stop offset="100%" stop-color="rgba(0,0,0,0.2)"/>
+          <!-- Cylindrical wood gradient - dark edges, bright center-left highlight -->
+          <linearGradient id="cylGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%"   stop-color="#160800"/>
+            <stop offset="8%"   stop-color="#4a2208"/>
+            <stop offset="22%"  stop-color="#9a5c28"/>
+            <stop offset="40%"  stop-color="#d08840"/>
+            <stop offset="50%"  stop-color="#f0a858"/>
+            <stop offset="62%"  stop-color="#c07838"/>
+            <stop offset="78%"  stop-color="#7a4018"/>
+            <stop offset="92%"  stop-color="#3a1808"/>
+            <stop offset="100%" stop-color="#160800"/>
           </linearGradient>
+          <!-- Top cap gradient (3D curved top) -->
+          <radialGradient id="topGrad" cx="36%" cy="30%" r="68%">
+            <stop offset="0%"   stop-color="#f8d080"/>
+            <stop offset="35%"  stop-color="#d09040"/>
+            <stop offset="75%"  stop-color="#904810"/>
+            <stop offset="100%" stop-color="#4a2008"/>
+          </radialGradient>
+          <!-- Metal band gradient -->
+          <linearGradient id="metalGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%"   stop-color="#0e0e0e"/>
+            <stop offset="12%"  stop-color="#383838"/>
+            <stop offset="40%"  stop-color="#808080"/>
+            <stop offset="52%"  stop-color="#b0b0b0"/>
+            <stop offset="72%"  stop-color="#505050"/>
+            <stop offset="100%" stop-color="#0e0e0e"/>
+          </linearGradient>
+          <!-- Ground shadow -->
+          <radialGradient id="gndShadow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stop-color="rgba(0,0,0,0.6)"/>
+            <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+          </radialGradient>
+          <!-- Bottom ellipse gradient -->
+          <radialGradient id="bottomGrad" cx="50%" cy="40%" r="55%">
+            <stop offset="0%"   stop-color="#7a4020"/>
+            <stop offset="100%" stop-color="#2a1008"/>
+          </radialGradient>
         </defs>
+
+        <!-- Ground shadow -->
+        <ellipse cx="137" cy="284" rx="100" ry="10" fill="url(#gndShadow)"/>
+
+        <!-- Barrel body (rectangle with rounded ends) -->
+        <rect x="38" y="72" width="198" height="204" rx="18" fill="url(#cylGrad)"/>
+
+        <!-- Subtle vertical wood plank lines -->
+        <line x1="68"  y1="74"  x2="66"  y2="274" stroke="rgba(0,0,0,0.14)" stroke-width="1.8"/>
+        <line x1="86"  y1="74"  x2="84"  y2="274" stroke="rgba(255,255,255,0.07)" stroke-width="1.2"/>
+        <line x1="108" y1="74"  x2="106" y2="274" stroke="rgba(0,0,0,0.10)" stroke-width="1.5"/>
+        <line x1="137" y1="74"  x2="137" y2="274" stroke="rgba(0,0,0,0.08)" stroke-width="1.2"/>
+        <line x1="165" y1="74"  x2="167" y2="274" stroke="rgba(0,0,0,0.10)" stroke-width="1.5"/>
+        <line x1="186" y1="74"  x2="188" y2="274" stroke="rgba(255,255,255,0.07)" stroke-width="1.2"/>
+        <line x1="205" y1="74"  x2="207" y2="274" stroke="rgba(0,0,0,0.14)" stroke-width="1.8"/>
+
+        <!-- Metal bands with 3D depth -->
+        <rect x="30" y="103" width="214" height="18" rx="9" fill="url(#metalGrad)"/>
+        <rect x="30" y="170" width="214" height="18" rx="9" fill="url(#metalGrad)"/>
+        <rect x="30" y="237" width="214" height="18" rx="9" fill="url(#metalGrad)"/>
+
+        <!-- Band top specular highlight -->
+        <rect x="32" y="103" width="210" height="4" rx="2" fill="rgba(255,255,255,0.28)"/>
+        <rect x="32" y="170" width="210" height="4" rx="2" fill="rgba(255,255,255,0.28)"/>
+        <rect x="32" y="237" width="210" height="4" rx="2" fill="rgba(255,255,255,0.28)"/>
+
+        <!-- Band bottom shadow -->
+        <rect x="32" y="117" width="210" height="3" rx="1" fill="rgba(0,0,0,0.35)"/>
+        <rect x="32" y="184" width="210" height="3" rx="1" fill="rgba(0,0,0,0.35)"/>
+
+        <!-- Bottom ellipse (gives 3D rounded bottom) -->
+        <ellipse cx="137" cy="276" rx="99" ry="14" fill="url(#bottomGrad)" opacity="0.8"/>
+
+        <!-- Top cap - outer ellipse (3D) -->
+        <ellipse cx="137" cy="73" rx="99" ry="22" fill="url(#topGrad)"/>
+        <!-- Top cap - inner ellipse rim -->
+        <ellipse cx="137" cy="69" rx="88" ry="17" fill="#d09040" opacity="0.85"/>
+        <!-- Top cap inner rim border -->
+        <ellipse cx="137" cy="69" rx="88" ry="17" fill="none" stroke="#8a5020" stroke-width="2.5"/>
+        <!-- Top cap outer rim border -->
+        <ellipse cx="137" cy="73" rx="99" ry="22" fill="none" stroke="#b07030" stroke-width="1.5" opacity="0.6"/>
+
+        <!-- Top highlight (light from upper-left) -->
+        <ellipse cx="108" cy="63" rx="35" ry="10" fill="rgba(255,255,255,0.2)"/>
       </svg>
 
       <!-- Holes grid -->
@@ -358,10 +501,64 @@
 
 <!-- Result overlay -->
 <div class="result-overlay" id="result-overlay">
-  <div class="result-emoji">💀</div>
-  <div class="result-title">당첨!</div>
+  <div class="result-jack">
+    <svg width="130" height="175" viewBox="0 0 110 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Dreads left -->
+      <path d="M24,58 Q10,82 13,112" stroke="#3a2800" stroke-width="5.5" stroke-linecap="round" fill="none"/>
+      <path d="M29,60 Q17,88 19,118" stroke="#2a1800" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <circle cx="14" cy="109" r="4.5" fill="#9a7a1a"/>
+      <!-- Dreads right -->
+      <path d="M86,58 Q100,82 97,112" stroke="#3a2800" stroke-width="5.5" stroke-linecap="round" fill="none"/>
+      <path d="M81,60 Q93,88 91,118" stroke="#2a1800" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <circle cx="96" cy="109" r="4.5" fill="#9a7a1a"/>
+      <!-- Hat -->
+      <path d="M55,4 L14,44 L96,44 Z" fill="#1a1a1a"/>
+      <path d="M16,40 L94,40 L96,48 L14,48 Z" fill="#252525"/>
+      <ellipse cx="55" cy="47" rx="41" ry="9" fill="#1e1e1e"/>
+      <path d="M80,10 Q96,2 100,9 Q91,22 76,28 Q85,16 80,10" fill="#9B1010" opacity="0.95"/>
+      <text x="35" y="44" font-size="9" fill="rgba(255,255,255,0.2)">☠</text>
+      <!-- Bandana -->
+      <rect x="22" y="46" width="66" height="10" rx="5" fill="#8B0010" opacity="0.9"/>
+      <!-- Face -->
+      <ellipse cx="55" cy="74" rx="29" ry="31" fill="#d4a574"/>
+      <ellipse cx="70" cy="74" rx="17" ry="26" fill="#b8885a" opacity="0.35"/>
+      <!-- Eyes -->
+      <ellipse cx="44" cy="70" rx="8.5" ry="7.5" fill="#fff"/>
+      <ellipse cx="44" cy="70" rx="10" ry="9" fill="none" stroke="#1a0800" stroke-width="2.5" opacity="0.65"/>
+      <circle cx="45" cy="71" r="5" fill="#251000"/>
+      <circle cx="47" cy="69" r="1.8" fill="#fff"/>
+      <ellipse cx="66" cy="70" rx="8.5" ry="7.5" fill="#fff"/>
+      <ellipse cx="66" cy="70" rx="10" ry="9" fill="none" stroke="#1a0800" stroke-width="2.5" opacity="0.65"/>
+      <circle cx="67" cy="71" r="5" fill="#251000"/>
+      <circle cx="69" cy="69" r="1.8" fill="#fff"/>
+      <!-- Nose -->
+      <path d="M52,79 Q55,86 58,79" stroke="#b07848" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      <!-- Mustache & mouth -->
+      <path d="M46,86 Q51,84 55,85 Q59,84 64,86" stroke="#2a1500" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <path d="M48,92 Q55,100 64,92" stroke="#7a3a18" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+      <!-- Beard braids -->
+      <path d="M47,100 Q45,113 47,126" stroke="#251500" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <path d="M63,100 Q65,113 63,126" stroke="#251500" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <circle cx="47" cy="124" r="3.5" fill="#9a7a1a"/>
+      <circle cx="63" cy="124" r="3.5" fill="#9a7a1a"/>
+      <!-- Coat -->
+      <path d="M26,107 Q30,132 33,150 L77,150 Q80,132 84,107 Q70,99 55,99 Q40,99 26,107 Z" fill="#3a1858"/>
+      <path d="M41,107 L55,118 L69,107" fill="#2e1245"/>
+      <line x1="41" y1="107" x2="55" y2="118" stroke="#5a2888" stroke-width="1.5"/>
+      <line x1="69" y1="107" x2="55" y2="118" stroke="#5a2888" stroke-width="1.5"/>
+      <line x1="55" y1="118" x2="55" y2="150" stroke="#2e1245" stroke-width="1.5"/>
+      <path d="M44,107 Q55,120 66,107" fill="#e8d8a0" opacity="0.75"/>
+      <circle cx="55" cy="127" r="4" fill="#c8a020"/>
+      <circle cx="55" cy="140" r="4" fill="#c8a020"/>
+      <!-- Rum bottle -->
+      <rect x="81" y="118" width="11" height="26" rx="5.5" fill="#2a7a28" opacity="0.85"/>
+      <rect x="83" y="110" width="7" height="11" rx="3.5" fill="#227020" opacity="0.9"/>
+      <rect x="84" y="107" width="5" height="6" rx="1.5" fill="#999"/>
+    </svg>
+  </div>
+  <div class="result-title">잭 스패로우 등장!</div>
   <div class="result-name" id="result-loser-name"></div>
-  <div style="color:rgba(255,255,255,0.6); font-size:1rem;">커피 한 잔 사야겠는데요? ☕</div>
+  <div style="color:rgba(255,255,255,0.6); font-size:1rem; margin-bottom:20px;">커피 한 잔 사야겠는데요? ☕</div>
   <button class="btn-restart" onclick="resetGame()">다시 하기</button>
   <button onclick="changeParticipants()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:0.9rem;cursor:pointer;margin-top:10px;font-family:'Noto Sans KR',sans-serif;">참가자 변경</button>
   <a href="index.html" style="display:block; margin-top:8px; color:rgba(255,255,255,0.3); font-size:0.9rem; text-decoration:none;">홈으로 돌아가기</a>
@@ -381,40 +578,29 @@
       const v = inp.value.trim();
       if (v) players.push({ name: v, out: false });
     });
-
-    if (players.length < 2) {
-      alert('최소 2명의 이름을 입력해주세요!');
-      return;
-    }
-
+    if (players.length < 2) { alert('최소 2명의 이름을 입력해주세요!'); return; }
     document.getElementById('setup-box').style.display = 'none';
     document.getElementById('game-area').style.display = 'block';
-
     initBarrel();
     renderPlayers();
     updateTurn();
   }
 
   function initBarrel() {
-    // Choose random bomb hole
     bombHole = Math.floor(Math.random() * totalHoles);
     usedHoles.clear();
-
     const grid = document.getElementById('holes-grid');
     grid.innerHTML = '';
-
     for (let i = 0; i < totalHoles; i++) {
       const btn = document.createElement('button');
       btn.className = 'hole-btn';
       btn.id = `hole-${i}`;
       btn.onclick = () => stab(i, btn);
       btn.title = `구멍 ${i + 1}`;
-      // Show hole number subtly
-      btn.innerHTML = `<span style="color:rgba(255,255,255,0.3);font-size:0.7rem;">${i+1}</span>`;
+      btn.innerHTML = `<span style="color:rgba(255,255,255,0.22);font-size:0.65rem;">${i+1}</span>`;
       grid.appendChild(btn);
     }
-
-    document.getElementById('uncle').className = 'uncle hidden';
+    document.getElementById('jack').className = 'jack hidden';
   }
 
   function renderPlayers() {
@@ -430,19 +616,13 @@
   }
 
   function updateTurn() {
-    // Find active players
     const active = players.filter(p => !p.out);
     if (active.length === 0) return;
-
-    // currentIndex wraps among active
     while (players[currentIndex].out) {
       currentIndex = (currentIndex + 1) % players.length;
     }
-
     document.getElementById('current-player-name').textContent =
       players[currentIndex].name + '님의 차례';
-
-    // Highlight
     players.forEach((p, i) => {
       const chip = document.getElementById(`chip-${i}`);
       if (!chip) return;
@@ -461,22 +641,18 @@
     </svg>`;
     btn.classList.add('used', 'has-knife');
 
-    const barrel = document.getElementById('barrel-container');
-    barrel.classList.add('shake');
-    setTimeout(() => barrel.classList.remove('shake'), 400);
+    const scene = document.getElementById('barrel-scene');
+    scene.classList.add('shake');
+    setTimeout(() => scene.classList.remove('shake'), 350);
 
     if (holeIndex === bombHole) {
-      // POP!
       setTimeout(() => {
-        const uncle = document.getElementById('uncle');
-        uncle.className = 'uncle pop';
-        uncle.textContent = '🧔';
-        setTimeout(() => showResult(), 600);
+        const jack = document.getElementById('jack');
+        jack.className = 'jack pop';
+        setTimeout(() => showResult(), 900);
       }, 200);
     } else {
-      // Next turn
       currentIndex = (currentIndex + 1) % players.length;
-      // Skip out players
       let safety = 0;
       while (players[currentIndex].out && safety < players.length) {
         currentIndex = (currentIndex + 1) % players.length;
@@ -494,7 +670,6 @@
 
   function resetGame() {
     document.getElementById('result-overlay').classList.remove('show');
-    // 참가자 유지하고 바로 재경기
     currentIndex = 0;
     initBarrel();
     renderPlayers();
