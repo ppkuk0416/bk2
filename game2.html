@@ -201,11 +201,10 @@
   .elim-chip {
     padding: 4px 14px;
     border-radius: 999px;
-    background: rgba(255,80,80,0.15);
-    border: 1px solid rgba(255,80,80,0.3);
+    background: rgba(68,221,119,0.12);
+    border: 1px solid rgba(68,221,119,0.35);
     font-size: 0.8rem;
-    color: rgba(255,150,150,0.8);
-    text-decoration: line-through;
+    color: rgba(100,230,150,0.9);
   }
 
   /* Action btn */
@@ -309,7 +308,7 @@
   </div>
 
   <div class="eliminated-section" id="eliminated-section" style="display:none;">
-    <div class="eliminated-label">탈락자</div>
+    <div class="eliminated-label">탈출자 (안전)</div>
     <div class="eliminated-chips" id="eliminated-chips"></div>
   </div>
 
@@ -462,23 +461,26 @@
     }
 
     const newActive = [];
-    const newElim = [];
+    const newSafe = [];
 
     activePlayers.forEach((name, i) => {
       const card = document.getElementById(`hand-${i}`);
-      if (moves[i] === loseMove) {
-        card.className = 'hand-card loser';
-        newElim.push(name);
-        eliminated.push(name);
-        addLog(`${round}라운드: ❌ ${name} 탈락 (${moves[i]})`);
-      } else {
+      if (moves[i] === winMove) {
+        // 이긴 사람은 탈출 (안전)
         card.className = 'hand-card winner';
+        newSafe.push(name);
+        eliminated.push(name);
+        addLog(`${round}라운드: ✅ ${name} 탈출! (${moves[i]})`);
+      } else {
+        // 진 사람은 다음 라운드 잔류
+        card.className = 'hand-card loser';
         newActive.push(name);
+        addLog(`${round}라운드: ❌ ${name} 잔류 (${moves[i]})`);
       }
     });
 
-    if (newElim.length > 0) {
-      addLog(`${round}라운드 결과: ${newElim.join(', ')} 탈락`);
+    if (newSafe.length > 0) {
+      addLog(`${round}라운드 결과: ${newSafe.join(', ')} 탈출`);
     }
 
     round++;
