@@ -3,175 +3,376 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>직장인 내기 게임</title>
+<title>카피바라 경주</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
     font-family: 'Noto Sans KR', sans-serif;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    background: linear-gradient(180deg, #87CEAA 0%, #5DBF82 18%, #3DAA62 40%, #2E9050 60%, #1E7A3A 100%);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    overflow: hidden;
+    position: relative;
   }
 
-  .title-wrap {
-    text-align: center;
-    margin-bottom: 50px;
+  /* ── 정글 배경 레이어들 ── */
+
+  /* 하늘 */
+  .sky {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 38%;
+    background: linear-gradient(180deg, #B5E8F0 0%, #87CEEA 50%, #A8D8B4 100%);
+    z-index: 0;
   }
 
-  .title-wrap h1 {
-    font-size: 2.8rem;
-    font-weight: 900;
-    color: #fff;
-    text-shadow: 0 0 30px rgba(255,200,0,0.5);
-    letter-spacing: -1px;
+  /* 태양 */
+  .sun {
+    position: fixed;
+    top: 28px;
+    right: 80px;
+    width: 72px;
+    height: 72px;
+    background: radial-gradient(circle at 40% 40%, #FFF176, #FFD700 50%, #FFA000);
+    border-radius: 50%;
+    box-shadow: 0 0 40px rgba(255,220,0,0.7), 0 0 80px rgba(255,200,0,0.3);
+    z-index: 1;
+    animation: sunPulse 4s ease-in-out infinite;
+  }
+  @keyframes sunPulse {
+    0%,100% { box-shadow: 0 0 40px rgba(255,220,0,0.7), 0 0 80px rgba(255,200,0,0.3); }
+    50%      { box-shadow: 0 0 55px rgba(255,220,0,0.9), 0 0 110px rgba(255,200,0,0.5); }
   }
 
-  .title-wrap p {
-    font-size: 1rem;
-    color: rgba(255,255,255,0.6);
-    margin-top: 10px;
+  /* 구름들 */
+  .cloud {
+    position: fixed;
+    background: rgba(255,255,255,0.88);
+    border-radius: 999px;
+    z-index: 1;
+    animation: cloudDrift linear infinite;
+  }
+  .cloud::before, .cloud::after {
+    content: '';
+    position: absolute;
+    background: rgba(255,255,255,0.88);
+    border-radius: 50%;
+  }
+  .cloud-1 { width: 100px; height: 32px; top: 40px; left: -120px; animation-duration: 28s; }
+  .cloud-1::before { width: 50px; height: 50px; top: -22px; left: 16px; }
+  .cloud-1::after  { width: 36px; height: 36px; top: -14px; left: 48px; }
+
+  .cloud-2 { width: 70px; height: 24px; top: 70px; left: -90px; animation-duration: 22s; animation-delay: -10s; opacity: 0.7; }
+  .cloud-2::before { width: 36px; height: 36px; top: -16px; left: 12px; }
+  .cloud-2::after  { width: 28px; height: 28px; top: -10px; left: 34px; }
+
+  .cloud-3 { width: 130px; height: 36px; top: 20px; left: -150px; animation-duration: 35s; animation-delay: -18s; opacity: 0.6; }
+  .cloud-3::before { width: 60px; height: 60px; top: -28px; left: 20px; }
+  .cloud-3::after  { width: 44px; height: 44px; top: -18px; left: 62px; }
+
+  @keyframes cloudDrift {
+    from { transform: translateX(0); }
+    to   { transform: translateX(calc(100vw + 200px)); }
   }
 
-  .emoji-title {
+  /* 배경 나무들 (뒤쪽) */
+  .trees-back {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 65%;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* 앞쪽 잎사귀 */
+  .leaf {
+    position: fixed;
+    z-index: 8;
     font-size: 3.5rem;
-    display: block;
-    margin-bottom: 10px;
-    animation: bounce 2s infinite;
+    pointer-events: none;
+    opacity: 0.85;
+  }
+  .leaf-tl  { top: -10px; left: -10px;  transform: rotate(-20deg); font-size: 5rem; }
+  .leaf-tr  { top: -10px; right: -10px; transform: rotate(20deg) scaleX(-1); font-size: 5rem; }
+  .leaf-bl  { bottom: 0;  left: -8px;   transform: rotate(10deg);  font-size: 4.5rem; }
+  .leaf-br  { bottom: 0;  right: -8px;  transform: rotate(-10deg) scaleX(-1); font-size: 4.5rem; }
+  .leaf-ml  { top: 45%;  left: -14px;   transform: rotate(-5deg);  font-size: 4rem; }
+  .leaf-mr  { top: 45%;  right: -14px;  transform: rotate(5deg) scaleX(-1); font-size: 4rem; }
+
+  /* 지면 */
+  .ground {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 22%;
+    background: linear-gradient(180deg, #4CAF50 0%, #388E3C 40%, #2E7D32 100%);
+    border-radius: 60% 60% 0 0 / 30px 30px 0 0;
+    z-index: 3;
+  }
+  .ground-grass {
+    position: fixed;
+    bottom: 18%;
+    left: 0; right: 0;
+    height: 60px;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent 0px, transparent 14px,
+      rgba(100,220,80,0.5) 14px, rgba(100,220,80,0.5) 18px
+    );
+    z-index: 4;
+    border-radius: 50% 50% 0 0 / 20px 20px 0 0;
   }
 
-  @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+  /* 장식 꽃/버섯 */
+  .deco {
+    position: fixed;
+    bottom: 18%;
+    font-size: 1.6rem;
+    z-index: 5;
+    pointer-events: none;
+    animation: decoBob 3s ease-in-out infinite;
+  }
+  .deco:nth-child(2) { animation-delay: -1s; }
+  .deco:nth-child(3) { animation-delay: -2s; }
+  @keyframes decoBob {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-4px); }
   }
 
-  .games-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 24px;
-    width: 100%;
-    max-width: 960px;
+  /* 떠다니는 나뭇잎 */
+  .falling-leaf {
+    position: fixed;
+    font-size: 1.4rem;
+    z-index: 6;
+    pointer-events: none;
+    animation: leafFall linear infinite;
+    opacity: 0.8;
+  }
+  @keyframes leafFall {
+    0%   { transform: translateY(-40px) rotate(0deg)   translateX(0);     opacity: 0; }
+    10%  { opacity: 0.8; }
+    90%  { opacity: 0.6; }
+    100% { transform: translateY(100vh) rotate(360deg) translateX(40px);  opacity: 0; }
   }
 
-  .game-card {
-    background: rgba(255,255,255,0.07);
-    border: 2px solid rgba(255,255,255,0.1);
-    border-radius: 24px;
-    padding: 36px 28px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-decoration: none;
+  /* ── 메인 카드 ── */
+  .main-card {
+    position: relative;
+    z-index: 10;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
+    padding: 0 20px;
+  }
+
+  /* 카피바라 마스코트 */
+  .mascot-wrap {
     position: relative;
-    overflow: hidden;
-    backdrop-filter: blur(10px);
+    margin-bottom: 8px;
   }
-
-  .game-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    opacity: 0;
-    transition: opacity 0.3s;
-    border-radius: 22px;
-  }
-
-  .game-card:hover {
-    transform: translateY(-8px);
-    border-color: rgba(255,255,255,0.3);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-  }
-
-  .game-card.pirate::before { background: linear-gradient(135deg, rgba(255,100,100,0.2), rgba(255,50,50,0.1)); }
-  .game-card.rps::before   { background: linear-gradient(135deg, rgba(100,200,255,0.2), rgba(50,150,255,0.1)); }
-  .game-card.capybara::before { background: linear-gradient(135deg, rgba(100,255,150,0.2), rgba(50,200,100,0.1)); }
-
-  .game-card:hover::before { opacity: 1; }
-
-  .game-emoji {
-    font-size: 4rem;
-    margin-bottom: 16px;
+  .mascot {
+    font-size: 7rem;
     display: block;
-    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+    filter: drop-shadow(0 8px 24px rgba(0,0,0,0.25));
+    animation: mascotBounce 2.2s ease-in-out infinite;
+  }
+  @keyframes mascotBounce {
+    0%,100% { transform: translateY(0)    rotate(-2deg); }
+    30%     { transform: translateY(-14px) rotate(2deg); }
+    60%     { transform: translateY(-6px)  rotate(-1deg); }
   }
 
-  .game-card h2 {
-    font-size: 1.5rem;
-    font-weight: 700;
+  /* 왕관 */
+  .crown {
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2.2rem;
+    animation: crownWiggle 2.2s ease-in-out infinite;
+  }
+  @keyframes crownWiggle {
+    0%,100% { transform: translateX(-50%) rotate(-5deg); }
+    30%     { transform: translateX(-50%) rotate(5deg) translateY(-4px); }
+    60%     { transform: translateX(-50%) rotate(-3deg); }
+  }
+
+  /* 제목 */
+  .title {
+    font-size: 3rem;
+    font-weight: 900;
     color: #fff;
-    margin-bottom: 10px;
+    text-shadow:
+      0 3px 0 rgba(0,0,0,0.18),
+      0 6px 20px rgba(0,100,30,0.4);
+    letter-spacing: -1px;
+    margin-bottom: 6px;
+    line-height: 1.1;
+  }
+  .title-sub {
+    font-size: 1.05rem;
+    color: rgba(255,255,255,0.88);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    margin-bottom: 36px;
+    font-weight: 700;
   }
 
-  .game-card p {
-    font-size: 0.9rem;
-    color: rgba(255,255,255,0.6);
-    line-height: 1.6;
-  }
-
-  .badge {
-    display: inline-block;
-    margin-top: 16px;
-    padding: 6px 18px;
+  /* 시작 버튼 */
+  .btn-play {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 52px;
+    background: linear-gradient(135deg, #FFD740 0%, #FF9800 100%);
+    border: none;
     border-radius: 999px;
-    font-size: 0.8rem;
+    color: #5a3000;
+    font-size: 1.35rem;
+    font-weight: 900;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    text-decoration: none;
+    box-shadow:
+      0 6px 0 rgba(180,100,0,0.45),
+      0 10px 30px rgba(255,160,0,0.4);
+    transition: transform 0.12s, box-shadow 0.12s;
+    letter-spacing: -0.5px;
+    animation: btnPulse 2.5s ease-in-out infinite;
+  }
+  @keyframes btnPulse {
+    0%,100% { box-shadow: 0 6px 0 rgba(180,100,0,0.45), 0 10px 30px rgba(255,160,0,0.4); }
+    50%      { box-shadow: 0 6px 0 rgba(180,100,0,0.45), 0 14px 44px rgba(255,160,0,0.65); }
+  }
+  .btn-play:hover  { transform: translateY(-3px); box-shadow: 0 9px 0 rgba(180,100,0,0.45), 0 16px 40px rgba(255,160,0,0.55); }
+  .btn-play:active { transform: translateY(2px);  box-shadow: 0 3px 0 rgba(180,100,0,0.45), 0 6px 16px rgba(255,160,0,0.3); }
+
+  /* 조연 카피바라들 */
+  .side-capys {
+    display: flex;
+    gap: 28px;
+    margin-top: 32px;
+    opacity: 0.9;
+  }
+  .side-capy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .side-capy span:first-child {
+    font-size: 2.4rem;
+    animation: sideBounce 2s ease-in-out infinite;
+    display: block;
+  }
+  .side-capy:nth-child(2) span:first-child { animation-delay: -0.4s; }
+  .side-capy:nth-child(3) span:first-child { animation-delay: -0.8s; }
+  .side-capy:nth-child(4) span:first-child { animation-delay: -1.2s; }
+  @keyframes sideBounce {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-7px); }
+  }
+  .side-name {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.8);
     font-weight: 700;
-    color: #fff;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    background: rgba(0,0,0,0.18);
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
   }
 
-  .pirate .badge  { background: linear-gradient(90deg, #ff4444, #ff6b6b); }
-  .rps .badge     { background: linear-gradient(90deg, #4488ff, #44aaff); }
-  .capybara .badge{ background: linear-gradient(90deg, #44cc77, #66dd99); }
-
-  .footer {
-    margin-top: 48px;
-    color: rgba(255,255,255,0.3);
-    font-size: 0.8rem;
-    text-align: center;
+  /* 하단 문구 */
+  .footer-text {
+    margin-top: 28px;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.65);
+    font-weight: 700;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.2);
+    letter-spacing: 0.3px;
   }
 </style>
 </head>
 <body>
 
-<div class="title-wrap">
-  <span class="emoji-title">🎲</span>
-  <h1>직장인 내기 게임</h1>
-  <p>오늘 커피는 누가 쏠까? 공평하게 결정하자!</p>
-</div>
+<!-- 배경 레이어들 -->
+<div class="sky"></div>
+<div class="sun"></div>
+<div class="cloud cloud-1"></div>
+<div class="cloud cloud-2"></div>
+<div class="cloud cloud-3"></div>
 
-<div class="games-grid">
-  <a href="game1.html" class="game-card pirate">
-    <span class="game-emoji">🗡️</span>
-    <h2>통아저씨 게임</h2>
-    <p>칼을 꽂다가 통아저씨가<br>튀어나오면 당첨!<br>누가 뚜껑을 열게 될까요?</p>
-    <span class="badge">2~8명</span>
+<!-- 모서리 잎사귀 -->
+<div class="leaf leaf-tl">🌿</div>
+<div class="leaf leaf-tr">🌿</div>
+<div class="leaf leaf-bl">🍃</div>
+<div class="leaf leaf-br">🍃</div>
+<div class="leaf leaf-ml">🌴</div>
+<div class="leaf leaf-mr">🌴</div>
+
+<!-- 떠다니는 나뭇잎 -->
+<div class="falling-leaf" style="left:8%;  animation-duration:7s;  animation-delay:0s;">🍃</div>
+<div class="falling-leaf" style="left:22%; animation-duration:9s;  animation-delay:-3s;">🌿</div>
+<div class="falling-leaf" style="left:60%; animation-duration:11s; animation-delay:-5s;">🍃</div>
+<div class="falling-leaf" style="left:80%; animation-duration:8s;  animation-delay:-1s;">🌿</div>
+<div class="falling-leaf" style="left:45%; animation-duration:13s; animation-delay:-7s;">🍃</div>
+
+<!-- 지면 -->
+<div class="ground"></div>
+<div class="ground-grass"></div>
+
+<!-- 장식 -->
+<div class="deco" style="left:5%;">🌸</div>
+<div class="deco" style="left:14%;">🍄</div>
+<div class="deco" style="left:78%;">🌺</div>
+<div class="deco" style="left:88%;">🌸</div>
+<div class="deco" style="left:50%;">🌼</div>
+
+<!-- 메인 카드 -->
+<div class="main-card">
+
+  <!-- 마스코트 -->
+  <div class="mascot-wrap">
+    <span class="crown">👑</span>
+    <span class="mascot">🦫</span>
+  </div>
+
+  <!-- 제목 -->
+  <div class="title">카피바라 경주</div>
+  <div class="title-sub">🌿 정글 속 느릿느릿 레이스 · 꼴등이 당첨! 🌿</div>
+
+  <!-- 시작 버튼 -->
+  <a href="game3.html" class="btn-play">
+    🏁 경주 시작!
   </a>
 
-  <a href="game2.html" class="game-card rps">
-    <span class="game-emoji">✊</span>
-    <h2>가위바위보</h2>
-    <p>최대 6명이 이름을 입력하면<br>가상의 손들이 승부를 결정해요!</p>
-    <span class="badge">2~6명</span>
-  </a>
+  <!-- 조연 카피바라들 -->
+  <div class="side-capys">
+    <div class="side-capy">
+      <span>🦫</span>
+      <span class="side-name">선수 1</span>
+    </div>
+    <div class="side-capy">
+      <span>🦫</span>
+      <span class="side-name">선수 2</span>
+    </div>
+    <div class="side-capy">
+      <span>🦫</span>
+      <span class="side-name">선수 3</span>
+    </div>
+    <div class="side-capy">
+      <span>🦫</span>
+      <span class="side-name">선수 4</span>
+    </div>
+  </div>
 
-  <a href="game3.html" class="game-card capybara">
-    <span class="game-emoji">🦫</span>
-    <h2>카피바라 경주</h2>
-    <p>귀여운 카피바라들이 달려요.<br>가장 느리게 들어오는 카피바라가 당첨!</p>
-    <span class="badge">2~8명</span>
-  </a>
-</div>
+  <div class="footer-text">가장 느리게 들어오는 카피바라 주인이 커피 담당 ☕</div>
 
-<div class="footer">
-  <p>직장 내기는 소소하게, 즐겁게 🙂</p>
 </div>
 
 </body>
