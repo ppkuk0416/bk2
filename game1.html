@@ -363,7 +363,8 @@
   <div class="result-name" id="result-loser-name"></div>
   <div style="color:rgba(255,255,255,0.6); font-size:1rem;">커피 한 잔 사야겠는데요? ☕</div>
   <button class="btn-restart" onclick="resetGame()">다시 하기</button>
-  <a href="index.html" style="display:block; margin-top:14px; color:rgba(255,255,255,0.4); font-size:0.9rem; text-decoration:none;">홈으로 돌아가기</a>
+  <button onclick="changeParticipants()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:0.9rem;cursor:pointer;margin-top:10px;font-family:'Noto Sans KR',sans-serif;">참가자 변경</button>
+  <a href="index.html" style="display:block; margin-top:8px; color:rgba(255,255,255,0.3); font-size:0.9rem; text-decoration:none;">홈으로 돌아가기</a>
 </div>
 
 <script>
@@ -493,9 +494,17 @@
 
   function resetGame() {
     document.getElementById('result-overlay').classList.remove('show');
+    // 참가자 유지하고 바로 재경기
+    currentIndex = 0;
+    initBarrel();
+    renderPlayers();
+    updateTurn();
+  }
+
+  function changeParticipants() {
+    document.getElementById('result-overlay').classList.remove('show');
     document.getElementById('setup-box').style.display = 'block';
     document.getElementById('game-area').style.display = 'none';
-    document.querySelectorAll('.name-inputs input').forEach(i => i.value = '');
   }
 </script>
 </body>

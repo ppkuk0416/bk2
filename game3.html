@@ -391,7 +391,8 @@
   <div class="result-sub">가장 느린 카피바라... 커피 사줘요 ☕</div>
   <div class="result-order" id="result-order"></div>
   <button class="btn-restart" onclick="resetRace()">다시 하기</button>
-  <a href="index.html" style="display:block;margin-top:14px;color:rgba(255,255,255,0.4);font-size:0.9rem;text-decoration:none;">홈으로</a>
+  <button onclick="changeParticipants()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:0.9rem;cursor:pointer;margin-top:10px;font-family:'Noto Sans KR',sans-serif;">참가자 변경</button>
+  <a href="index.html" style="display:block;margin-top:8px;color:rgba(255,255,255,0.3);font-size:0.9rem;text-decoration:none;">홈으로</a>
 </div>
 
 <script>
@@ -703,9 +704,20 @@
   function resetRace() {
     if (animFrameId) cancelAnimationFrame(animFrameId);
     document.getElementById('result-overlay').classList.remove('show');
+    // 참가자 유지하고 바로 재경기
+    buildTracks();
+    resetPositions();
+    document.getElementById('action-btn').disabled = false;
+    document.getElementById('action-btn').textContent = '🦫 출발!';
+    document.getElementById('race-status').textContent = '🏁 출발 준비!';
+    document.getElementById('arrival-log').innerHTML = '';
+  }
+
+  function changeParticipants() {
+    if (animFrameId) cancelAnimationFrame(animFrameId);
+    document.getElementById('result-overlay').classList.remove('show');
     document.getElementById('setup-box').style.display = 'block';
     document.getElementById('game-area').style.display = 'none';
-    document.querySelectorAll('.name-inputs input').forEach(i => i.value = '');
   }
 </script>
 </body>
