@@ -176,9 +176,10 @@
     margin-bottom: 8px;
   }
   .mascot {
-    font-size: 7rem;
+    width: 210px;
+    height: auto;
     display: block;
-    filter: drop-shadow(0 8px 24px rgba(0,0,0,0.25));
+    filter: drop-shadow(0 10px 28px rgba(0,0,0,0.22));
     animation: mascotBounce 2.2s ease-in-out infinite;
   }
   @keyframes mascotBounce {
@@ -186,20 +187,12 @@
     30%     { transform: translateY(-14px) rotate(2deg); }
     60%     { transform: translateY(-6px)  rotate(-1deg); }
   }
-
-  /* 왕관 */
-  .crown {
-    position: absolute;
-    top: -16px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 2.2rem;
-    animation: crownWiggle 2.2s ease-in-out infinite;
-  }
-  @keyframes crownWiggle {
-    0%,100% { transform: translateX(-50%) rotate(-5deg); }
-    30%     { transform: translateX(-50%) rotate(5deg) translateY(-4px); }
-    60%     { transform: translateX(-50%) rotate(-3deg); }
+  .sparkle-1 { animation: sparkleAnim 2s ease-in-out infinite; }
+  .sparkle-2 { animation: sparkleAnim 2s ease-in-out infinite 0.9s; }
+  .sparkle-3 { animation: sparkleAnim 2s ease-in-out infinite 1.6s; }
+  @keyframes sparkleAnim {
+    0%,100% { opacity: 0.2; }
+    50%      { opacity: 1; }
   }
 
   /* 제목 */
@@ -338,8 +331,121 @@
 
   <!-- 마스코트 -->
   <div class="mascot-wrap">
-    <span class="crown">👑</span>
-    <span class="mascot">🦫</span>
+    <svg class="mascot" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+      <!-- 그림자 -->
+      <ellipse cx="100" cy="214" rx="48" ry="6" fill="rgba(0,0,0,0.13)"/>
+
+      <!-- 몸통 -->
+      <ellipse cx="100" cy="168" rx="54" ry="38" fill="#C8936A"/>
+      <!-- 배 밝은 부분 -->
+      <ellipse cx="100" cy="176" rx="36" ry="24" fill="#DBA878" opacity="0.45"/>
+
+      <!-- 다리 -->
+      <ellipse cx="64"  cy="197" rx="22" ry="13" fill="#B07848"/>
+      <ellipse cx="136" cy="197" rx="22" ry="13" fill="#B07848"/>
+      <!-- 발가락 -->
+      <ellipse cx="54"  cy="205" rx="7" ry="4" fill="#9A6438"/>
+      <ellipse cx="70"  cy="207" rx="7" ry="4" fill="#9A6438"/>
+      <ellipse cx="126" cy="205" rx="7" ry="4" fill="#9A6438"/>
+      <ellipse cx="142" cy="207" rx="7" ry="4" fill="#9A6438"/>
+
+      <!-- 목 -->
+      <ellipse cx="100" cy="134" rx="28" ry="20" fill="#C8936A"/>
+
+      <!-- 머리 (크고 동그랗게) -->
+      <ellipse cx="100" cy="90" rx="58" ry="54" fill="#D4A870"/>
+
+      <!-- 귀 왼쪽 -->
+      <ellipse cx="56"  cy="47" rx="17" ry="20" fill="#C0885A"/>
+      <ellipse cx="56"  cy="49" rx="10" ry="13" fill="#F0B898"/>
+      <!-- 귀 오른쪽 -->
+      <ellipse cx="144" cy="47" rx="17" ry="20" fill="#C0885A"/>
+      <ellipse cx="144" cy="49" rx="10" ry="13" fill="#F0B898"/>
+
+      <!-- 주둥이 영역 -->
+      <ellipse cx="100" cy="108" rx="38" ry="26" fill="#BC8050"/>
+
+      <!-- 눈 왼쪽 -->
+      <ellipse cx="74" cy="82" rx="21" ry="23" fill="white"/>
+      <circle  cx="76" cy="84" r="15" fill="#140604"/>
+      <circle  cx="76" cy="84" r="11" fill="#2A1208"/>
+      <!-- 눈 빛 -->
+      <circle cx="83" cy="76" r="6.5" fill="white"/>
+      <circle cx="69" cy="91" r="3"   fill="rgba(255,255,255,0.88)"/>
+      <circle cx="85" cy="89" r="2"   fill="rgba(255,255,255,0.7)"/>
+
+      <!-- 눈 오른쪽 -->
+      <ellipse cx="126" cy="82" rx="21" ry="23" fill="white"/>
+      <circle  cx="128" cy="84" r="15" fill="#140604"/>
+      <circle  cx="128" cy="84" r="11" fill="#2A1208"/>
+      <!-- 눈 빛 -->
+      <circle cx="135" cy="76" r="6.5" fill="white"/>
+      <circle cx="121" cy="91" r="3"   fill="rgba(255,255,255,0.88)"/>
+      <circle cx="137" cy="89" r="2"   fill="rgba(255,255,255,0.7)"/>
+
+      <!-- 코 -->
+      <ellipse cx="100" cy="106" rx="15" ry="9" fill="#7A3818"/>
+      <ellipse cx="100" cy="103" rx="9"  ry="5" fill="#9A5028" opacity="0.75"/>
+      <!-- 콧구멍 -->
+      <ellipse cx="93.5"  cy="108" rx="3.5" ry="2.5" fill="#5A2810"/>
+      <ellipse cx="106.5" cy="108" rx="3.5" ry="2.5" fill="#5A2810"/>
+
+      <!-- 입 (귀여운 미소) -->
+      <path d="M83 118 Q100 134 117 118" stroke="#7A3818" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+
+      <!-- 볼터치 (양쪽) -->
+      <ellipse cx="49"  cy="98" rx="18" ry="12" fill="rgba(255,80,110,0.32)"/>
+      <ellipse cx="151" cy="98" rx="18" ry="12" fill="rgba(255,80,110,0.32)"/>
+
+      <!-- 히비스커스 꽃 (오른쪽 귀 위) -->
+      <g transform="translate(147,34)">
+        <!-- 꽃잎 5장 -->
+        <circle cx="0"     cy="-13"  r="9" fill="#FF7BAE"/>
+        <circle cx="12.4"  cy="-4"   r="9" fill="#FF80B2"/>
+        <circle cx="7.6"   cy="10.4" r="9" fill="#FF88B8"/>
+        <circle cx="-7.6"  cy="10.4" r="9" fill="#FF88B8"/>
+        <circle cx="-12.4" cy="-4"   r="9" fill="#FF7BAE"/>
+        <!-- 꽃잎 안쪽 밝기 -->
+        <circle cx="0" cy="-13" r="5" fill="#FFB0D4" opacity="0.5"/>
+        <!-- 꽃 중심 -->
+        <circle cx="0" cy="0" r="9" fill="#FFE44A"/>
+        <circle cx="0" cy="0" r="6" fill="#FFD000"/>
+        <!-- 수술 -->
+        <circle cx="0"    cy="-5.5" r="2" fill="#FF8800"/>
+        <circle cx="5.2"  cy="2.8"  r="2" fill="#FF8800"/>
+        <circle cx="-5.2" cy="2.8"  r="2" fill="#FF8800"/>
+      </g>
+
+      <!-- 왕관 (머리 위) -->
+      <g transform="translate(100,42)">
+        <!-- 왕관 몸체 -->
+        <polygon points="-22,10 -22,-4 -12,-14 0,-4 12,-14 22,-4 22,10" fill="#FFD740" stroke="#E5A500" stroke-width="1.5"/>
+        <!-- 보석 -->
+        <circle cx="0"   cy="-1" r="4.5" fill="#FF5C8D"/>
+        <circle cx="-14" cy="3"  r="3"   fill="#7EC8FF"/>
+        <circle cx="14"  cy="3"  r="3"   fill="#7EC8FF"/>
+        <!-- 왕관 윗 점 빛 -->
+        <circle cx="0"    cy="-1" r="2" fill="rgba(255,255,255,0.55)"/>
+      </g>
+
+      <!-- 반짝이 -->
+      <g class="sparkle-1" transform="translate(20,76)">
+        <line x1="0" y1="-11" x2="0" y2="11"  stroke="#FFE566" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="-11" y1="0" x2="11" y2="0"  stroke="#FFE566" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="-7" y1="-7" x2="7" y2="7"   stroke="#FFE566" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="7" y1="-7" x2="-7" y2="7"   stroke="#FFE566" stroke-width="1.5" stroke-linecap="round"/>
+      </g>
+      <g class="sparkle-2" transform="translate(180,106)">
+        <line x1="0" y1="-8" x2="0" y2="8"    stroke="#FFE566" stroke-width="2" stroke-linecap="round"/>
+        <line x1="-8" y1="0" x2="8" y2="0"    stroke="#FFE566" stroke-width="2" stroke-linecap="round"/>
+        <line x1="-5" y1="-5" x2="5" y2="5"   stroke="#FFE566" stroke-width="1.2" stroke-linecap="round"/>
+        <line x1="5" y1="-5" x2="-5" y2="5"   stroke="#FFE566" stroke-width="1.2" stroke-linecap="round"/>
+      </g>
+      <g class="sparkle-3" transform="translate(168,60)">
+        <line x1="0" y1="-6" x2="0" y2="6"    stroke="#FFF0A0" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="-6" y1="0" x2="6" y2="0"    stroke="#FFF0A0" stroke-width="1.5" stroke-linecap="round"/>
+      </g>
+    </svg>
   </div>
 
   <!-- 제목 -->
